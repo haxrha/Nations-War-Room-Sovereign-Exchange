@@ -1,0 +1,86 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+:root {
+  --bg-deep: #0a0e14;
+  --bg-panel: #111820;
+  --bg-elevated: #1a2332;
+  --border: #2a3544;
+  --text: #e8edf4;
+  --text-muted: #8b9cb3;
+  --accent: #3b9eff;
+  --accent-dim: #2563a8;
+  --green: #22c55e;
+  --red: #ef4444;
+  --amber: #f59e0b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.leaflet-container {
+  background: var(--bg-deep);
+  font-family: inherit;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.875rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.live-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
