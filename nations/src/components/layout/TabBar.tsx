@@ -5,14 +5,16 @@ import {
   Handshake,
   Landmark,
   Trophy,
+  Plane,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
-export type AppTab = 'world' | 'market' | 'exchange' | 'nation' | 'bots' | 'ranks'
+export type AppTab = 'world' | 'flight' | 'market' | 'exchange' | 'nation' | 'bots' | 'ranks'
 
 const TABS: { id: AppTab; label: string; shortLabel: string; icon: LucideIcon }[] = [
   { id: 'world', label: 'World', shortLabel: 'Map', icon: Globe },
+  { id: 'flight', label: 'Flight', shortLabel: 'Fly', icon: Plane },
   { id: 'market', label: 'Market', shortLabel: 'Market', icon: TrendingUp },
   { id: 'exchange', label: 'Exchange', shortLabel: 'Trade', icon: Handshake },
   { id: 'nation', label: 'Nation', shortLabel: 'Nation', icon: Landmark },

@@ -11,28 +11,47 @@ Server-side module for the sovereign trade exchange. Implements the full game lo
 
 ## Prerequisites
 
-1. Install the [SpacetimeDB CLI](https://spacetimedb.com/docs/)
-2. Log in: `spacetime login`
-3. Start local server: `spacetime start`
+1. **Install the SpacetimeDB CLI** (required — otherwise `zsh: command not found: spacetime`):
+   - macOS / Linux:  
+     `curl -sSf https://install.spacetimedb.com | sh`
+   - Then **restart the terminal** (or `source` the file the installer prints) so `spacetime` is on your `PATH`.
+   - Verify: `spacetime version`
+   - Full options: [Install | SpacetimeDB](https://spacetimedb.com/install) (Windows / Docker there too).
+2. **Terminal A — keep this running:** `spacetime start` (local host must be up before publish/call)
+3. For a **local** server you usually do **not** need `spacetime login`; if the CLI asks you to log in, follow the prompt or use non-interactive flags from `spacetime help publish` (e.g. `--yes=skip-login`).
 
 ## Publish
 
-From this directory:
+From **this directory** (`nations/spacetimedb`):
 
 ```bash
 npm install
+spacetime publish --server local --module-path . nations
+```
+
+Shorthand (same meaning — note the **period** `.` for “this directory”, not a bullet `•`):
+
+```bash
 spacetime publish nations -p . -s local
 ```
+
+**Common mistakes**
+
+- `-p •` or `-p` with a typo — must be **`-p .`** (dot only).
+- Running `publish` and `call` as one line with no `&&` — the shell will mis-parse; use two commands or `spacetime publish ... && spacetime call ...`.
+- `spacetime start` not running — you get connection errors when publishing.
 
 Or from the repo root with `spacetime dev` (recommended for local dev with client binding generation).
 
 ## Initialize the world
 
-After first publish, seed the world **once**:
+After first publish, seed the world **once** (also targets **local**):
 
 ```bash
-spacetime call nations init
+spacetime call --server local nations init
 ```
+
+If your CLI defaults to a remote server, always pass **`--server local`** (or `-s local`) so it matches the client (`VITE_SPACETIME_HOST=ws://127.0.0.1:3000` in `nations/.env.example`).
 
 ## Reducers
 

@@ -210,6 +210,45 @@ body {
   border-radius: 0 0 1rem 1rem;
 }
 
+/* Flight deck: plane marker */
+.plane-marker { background: transparent; border: none; }
+.plane-marker__inner {
+  width: 34px;
+  height: 34px;
+  transform-origin: 50% 50%;
+  transition: transform 80ms linear;
+  filter: drop-shadow(0 0 6px rgba(94, 106, 210, 0.6));
+  will-change: transform;
+}
+
+/* Flight deck: dark popups */
+.leaflet-popup-content-wrapper {
+  background: rgba(10, 10, 12, 0.95);
+  color: #ededef;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+.leaflet-popup-content { margin: 0.75rem 0.9rem; }
+.leaflet-popup-tip { background: rgba(10, 10, 12, 0.95); }
+.leaflet-popup-close-button { color: #8a8f98 !important; }
+.flight-popup__title { font-size: 0.85rem; font-weight: 600; }
+.flight-popup__sub { font-size: 0.72rem; color: #8a8f98; margin-top: 0.1rem; }
+.flight-popup__btn {
+  margin-top: 0.6rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(94, 106, 210, 0.35);
+  background: rgba(94, 106, 210, 0.15);
+  color: #ededef;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.flight-popup__btn:hover { background: rgba(94, 106, 210, 0.3); }
+
 .section-divider {
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);

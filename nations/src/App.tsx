@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Header } from './components/layout/Header'
 import { TabBar, type AppTab } from './components/layout/TabBar'
 import { WorldMap } from './components/map/WorldMap'
+import { FlightMap } from './components/flight/FlightMap'
 import { MarketPanel } from './components/market/MarketPanel'
 import { NationTab } from './components/country/NationTab'
 import { ExchangeTab } from './components/trading/ExchangeTab'
@@ -32,6 +33,15 @@ function App() {
             )}
           >
             <WorldMap active={tab === 'world'} className="h-full" />
+          </div>
+
+          <div
+            className={cn(
+              'mx-auto h-full max-w-6xl',
+              tab === 'flight' ? 'block' : 'hidden',
+            )}
+          >
+            <FlightMap active={tab === 'flight'} className="h-full" />
           </div>
 
           <div
