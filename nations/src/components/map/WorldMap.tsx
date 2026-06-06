@@ -1,65 +1,109 @@
 import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useGame } from '../../context/GameContext'
-import { computeGdpProxy, formatMoney, getCountry, interpolateRoute } from '../../lib/utils'
+import { formatMoney, getCountry, botStrategyLabel, idStr } from '../../lib/utils'
 import { Panel } from '../ui/Panel'
-import { accentAt } from '../../lib/design-system'
-import type { Country } from '../../types'
-
-const MAP_ACCENTS = ['#FF3AF2', '#00F5D4', '#FFE600', '#FF6B35', '#7B2FFF']
-
-function RouteLayer({ from, to, pos, color }: { from: Country; to: Country; pos: { lat: number; lng: number }; color: string }) {
-  return (
-    <>
-      <Polyline positions={[[from.lat, from.lng], [to.lat, to.lng]]} pathOptions={{ color, weight: 3, opacity: 0.55, dashArray: '8 10' }} />
-      <CircleMarker center={[pos.lat, pos.lng]} radius={6} pathOptions={{ color: '#fff', fillColor: color, fillOpacity: 1, weight: 3 }}>
-        <Tooltip direction="right"><span className="font-heading text-xs font-bold uppercase">{from.flag} → {to.flag} 🚢</span></Tooltip>
-      </CircleMarker>
-    </>
-  )
-}
+import { tokens } from '../../lib/design-system'
 
 function MapResizer() {
   const map = useMap()
-  useEffect(() => { const t = setTimeout(() => map.invalidateSize(), 100); return () => clearTimeout(t) }, [map])
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 100)
+    return () => clearTimeout(t)
+  }, [map])
   return null
 }
 
 export function WorldMap() {
-  const { state, now } = useGame()
-  const player = state.playerCountryId
-  const activeRoutes = state.routes.map((route) => {
-    const from = getCountry(route.fromCountryId, state.countries)
-    const to = getCountry(route.toCountryId, state.countries)
-    if (!from || !to) return null
-    const progress = (now - route.startedAt) / (route.completesAt - route.startedAt)
-    return { route, from, to, pos: interpolateRoute(from, to, progress) }
-  }).filter(Boolean)
+  const { countries, offers, playerCountryId, commodities } = useGame()
+
+  const offerArcs = useMemo(() => {
+    return offers.slice(0, 12).map((offer) => {
+      const seller = getCountry(offer.sellerId, countries)
+      if (!seller) return null
+      const commodity = commodities.find((c) => c.id === offer.commodityId)
+      const hubLat = seller.lat + (commodity ? (Number(offer.commodityId) % 5) - 2 : 0)
+      const hubLng = seller.lng + (commodity ? (Number(offer.commodityId) % 3) - 1 : 0) * 8
+      return { offer, seller, hubLat, hubLng, commodity }
+    }).filter(Boolean)
+  }, [offers, countries, commodities])
+
+  const onlineCount = countries.filter((c) => c.online).length
 
   return (
-    <Panel title="World Map" subtitle={`${state.countries.length} nations · ${activeRoutes.length} shipments`} accentIndex={0} emoji="🌍" rotate={false} className="shadow-multi-lg">
+    <Panel
+      title="World Map"
+      subtitle={`${countries.length} nations · ${onlineCount} online · ${offers.length} open offers`}
+      label="Geography"
+      spotlight
+      className="min-h-[320px]"
+    >
       <div className="relative min-h-[280px] flex-1 lg:min-h-0">
-        <MapContainer center={[20, 10]} zoom={2} minZoom={2} maxZoom={6} className="h-full w-full rounded-b-3xl" zoomControl={false}>
+        <MapContainer
+          center={[20, 10]}
+          zoom={2}
+          minZoom={2}
+          maxZoom={6}
+          className="h-full w-full"
+          zoomControl={false}
+        >
           <MapResizer />
-          <TileLayer attribution='&copy; OSM' url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-          {state.countries.map((country, i) => {
-            const isPlayer = country.id === player
-            const color = MAP_ACCENTS[i % MAP_ACCENTS.length]
+          <TileLayer
+            attribution='&copy; OSM'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+          {countries.map((country) => {
+            const isPlayer = playerCountryId != null && country.id === playerCountryId
+            const hasOffers = offers.some((o) => o.sellerId === country.id)
+            const fill = isPlayer ? tokens.color.accent : hasOffers ? tokens.color.accentBright : '#3f3f46'
             return (
-              <CircleMarker key={country.id} center={[country.lat, country.lng]} radius={isPlayer ? 16 : 11}
-                pathOptions={{ color: isPlayer ? '#FFE600' : '#fff', fillColor: color, fillOpacity: 0.9, weight: isPlayer ? 4 : 2 }}>
-                <Tooltip direction="top" offset={[0, -12]}>
-                  <div className="font-body text-xs">
-                    <div className="font-heading text-sm font-black uppercase">{country.flag} {country.name}</div>
-                    <div className="text-white/70">{country.region}</div>
-                    <div className="font-heading font-bold" style={{ color }}>GDP {formatMoney(computeGdpProxy(country.id, state), true)}</div>
-                    {country.isBot && <div className="text-[10px] italic text-[#00F5D4]">🤖 {country.personality.replace(/_/g, ' ')}</div>}
+              <CircleMarker
+                key={idStr(country.id)}
+                center={[country.lat, country.lng]}
+                radius={isPlayer ? 14 : hasOffers ? 11 : 8}
+                pathOptions={{
+                  color: isPlayer ? tokens.color.accent : 'rgba(255,255,255,0.3)',
+                  fillColor: fill,
+                  fillOpacity: isPlayer ? 1 : 0.75,
+                  weight: isPlayer ? 2 : 1,
+                }}
+              >
+                <Tooltip direction="top" offset={[0, -10]}>
+                  <div className="text-xs">
+                    <div className="font-semibold">
+                      {country.flag} {country.name}
+                    </div>
+                    <div className="text-[#8A8F98]">{country.region}</div>
+                    <div className="font-medium text-[#5E6AD2]">
+                      GDP {formatMoney(country.gdpScore, true)}
+                    </div>
+                    {country.isBot && (
+                      <div className="text-[10px] text-[#8A8F98]">
+                        {botStrategyLabel(country.botStrategy)}
+                      </div>
+                    )}
                   </div>
                 </Tooltip>
               </CircleMarker>
             )
           })}
-          {activeRoutes.map((item, i) => item && <RouteLayer key={item.route.id} from={item.from} to={item.to} pos={item.pos} color={accentAt(i + 1)} />)}
+          {offerArcs.map((item) =>
+            item ? (
+              <Polyline
+                key={idStr(item.offer.id)}
+                positions={[
+                  [item.seller.lat, item.seller.lng],
+                  [item.hubLat, item.hubLng],
+                ]}
+                pathOptions={{
+                  color: tokens.color.accent,
+                  weight: 1.5,
+                  opacity: 0.35,
+                  dashArray: '4 8',
+                }}
+              />
+            ) : null,
+          )}
         </MapContainer>
       </div>
     </Panel>

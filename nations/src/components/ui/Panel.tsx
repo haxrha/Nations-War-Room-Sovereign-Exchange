@@ -1,34 +1,55 @@
 import { cn } from '../../lib/cn'
-import { accentAt, clashBorder, borderStyleAt, cardRotation } from '../../lib/design-system'
+import { useSpotlight } from '../../hooks/useSpotlight'
 import type { ReactNode } from 'react'
 
 interface PanelProps {
   children: ReactNode
   title: string
   subtitle?: ReactNode
-  accentIndex?: number
-  emoji?: string
+  label?: string
   className?: string
   headerExtra?: ReactNode
-  rotate?: boolean
+  spotlight?: boolean
+  variant?: 'default' | 'glass'
 }
 
-export function Panel({ children, title, subtitle, accentIndex = 0, emoji, className, headerExtra, rotate = true }: PanelProps) {
-  const accent = accentAt(accentIndex)
-  const borderColor = clashBorder(accentIndex)
+export function Panel({
+  children,
+  title,
+  subtitle,
+  label,
+  className,
+  headerExtra,
+  spotlight = true,
+  variant = 'default',
+}: PanelProps) {
+  const spot = useSpotlight()
+
   return (
     <div
-      className={cn('relative flex h-full flex-col overflow-hidden rounded-3xl border-4 backdrop-blur-sm transition-all duration-300 hover:scale-[1.01]', rotate && cardRotation(accentIndex), borderStyleAt(accentIndex), className)}
-      style={{ backgroundColor: 'rgba(45, 27, 78, 0.82)', borderColor, boxShadow: `8px 8px 0 ${accent}, 0 0 24px ${accent}33` }}
+      ref={spotlight ? spot.ref : undefined}
+      onMouseMove={spotlight ? spot.onMouseMove : undefined}
+      onMouseEnter={spotlight ? spot.onMouseEnter : undefined}
+      onMouseLeave={spotlight ? spot.onMouseLeave : undefined}
+      className={cn(
+        'spotlight-card card-surface relative flex h-full flex-col overflow-hidden',
+        variant === 'glass' && 'backdrop-blur-xl',
+        className,
+      )}
     >
-      <div className="pointer-events-none absolute inset-0 pattern-dots-cyan opacity-20" aria-hidden="true" />
-      <div className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-b-4 border-dashed px-4 py-3" style={{ borderColor: accent }}>
-        <div className="flex min-w-0 items-center gap-2">
-          {emoji && <span className="animate-wiggle text-2xl" aria-hidden="true">{emoji}</span>}
-          <div className="min-w-0">
-            <h2 className="font-heading truncate text-sm font-black uppercase tracking-wider text-shadow-single md:text-base">{title}</h2>
-            {subtitle && <p className="truncate font-body text-[10px] font-bold uppercase tracking-widest text-white/60">{subtitle}</p>}
-          </div>
+      <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-4">
+        <div className="min-w-0">
+          {label && (
+            <div className="font-mono-label mb-1 text-[10px] font-medium uppercase tracking-widest text-[#8A8F98]">
+              {label}
+            </div>
+          )}
+          <h2 className="truncate text-sm font-semibold tracking-tight text-[#EDEDEF] md:text-base">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="truncate text-xs text-[#8A8F98]">{subtitle}</p>
+          )}
         </div>
         {headerExtra}
       </div>
@@ -37,22 +58,49 @@ export function Panel({ children, title, subtitle, accentIndex = 0, emoji, class
   )
 }
 
-export function StatPill({ label, value, accentIndex = 0 }: { label: string; value: string; accentIndex?: number }) {
-  const accent = accentAt(accentIndex)
-  const border = clashBorder(accentIndex + 1)
+export function StatPill({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value: string
+  hint?: string
+}) {
   return (
-    <div className={cn('rounded-2xl border-4 p-3 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02]', accentIndex % 2 === 0 ? 'rotate-1' : '-rotate-1')}
-      style={{ backgroundColor: `${accent}18`, borderColor: border, boxShadow: `4px 4px 0 ${accent}` }}>
-      <div className="font-heading text-[9px] font-bold uppercase tracking-widest" style={{ color: accent }}>{label}</div>
-      <div className="font-heading truncate text-lg font-black text-white text-shadow-single">{value}</div>
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-3 transition-transform duration-300 hover:-translate-y-0.5"
+      style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      <div className="font-mono-label text-[10px] uppercase tracking-widest text-[#8A8F98]">
+        {label}
+      </div>
+      <div className="mt-1 truncate text-lg font-semibold tracking-tight text-[#EDEDEF]">
+        {value}
+      </div>
+      {hint && <div className="mt-0.5 text-[10px] text-[#8A8F98]">{hint}</div>}
     </div>
   )
 }
 
-export function Badge({ children, color, dashed }: { children: ReactNode; color: string; dashed?: boolean }) {
+export function Badge({
+  children,
+  variant = 'default',
+}: {
+  children: ReactNode
+  variant?: 'default' | 'accent' | 'success' | 'danger'
+}) {
+  const styles = {
+    default: 'border-white/10 text-[#8A8F98] bg-white/[0.04]',
+    accent: 'border-[#5E6AD2]/30 text-[#6872D9] bg-[#5E6AD2]/10',
+    success: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
+    danger: 'border-red-500/30 text-red-400 bg-red-500/10',
+  }
   return (
-    <span className={cn('inline-flex items-center rounded-full border-4 px-2.5 py-0.5 font-heading text-[9px] font-black uppercase tracking-widest', dashed ? 'border-dashed' : 'border-solid')}
-      style={{ borderColor: color, color, backgroundColor: `${color}22` }}>
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider',
+        styles[variant],
+      )}
+    >
       {children}
     </span>
   )
