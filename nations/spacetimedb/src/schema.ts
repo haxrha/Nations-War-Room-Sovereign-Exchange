@@ -125,6 +125,31 @@ export const tradeHistory = table(
   },
 );
 
+/** commodityId 0 = all commodities embargoed */
+export const sanction = table(
+  {
+    name: 'sanction',
+    public: true,
+    indexes: [
+      { accessor: 'byTarget', algorithm: 'btree', columns: ['targetCountryId'] },
+      {
+        accessor: 'byIssuerAndTarget',
+        algorithm: 'btree',
+        columns: ['issuerCountryId', 'targetCountryId'],
+      },
+    ],
+  },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    issuerCountryId: t.u64().index('btree'),
+    targetCountryId: t.u64(),
+    commodityId: t.u64(),
+    reason: t.string(),
+    active: t.bool().index('btree'),
+    createdAt: t.timestamp(),
+  },
+);
+
 /** Forward refs resolved after reducer exports are created. */
 const scheduleReducers: Record<'price_tick' | 'bot_tick', object | null> = {
   price_tick: null,
@@ -162,6 +187,7 @@ export const spacetimedb = schema({
   countryResource,
   tradeOffer,
   tradeHistory,
+  sanction,
   priceTickSchedule,
   botTickSchedule,
 });

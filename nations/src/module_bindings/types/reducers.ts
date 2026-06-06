@@ -8,14 +8,18 @@ import { type Infer as __Infer } from "spacetimedb";
 // Import all reducer arg schemas
 import AcceptTradeReducer from "../accept_trade_reducer";
 import CancelOfferReducer from "../cancel_offer_reducer";
+import ImposeSanctionReducer from "../impose_sanction_reducer";
 import InitReducer from "../init_reducer";
+import LiftSanctionReducer from "../lift_sanction_reducer";
 import PlaceOfferReducer from "../place_offer_reducer";
 import ResetMetaReducer from "../reset_meta_reducer";
 import SetCountryProfileReducer from "../set_country_profile_reducer";
 
 export type AcceptTradeParams = __Infer<typeof AcceptTradeReducer>;
 export type CancelOfferParams = __Infer<typeof CancelOfferReducer>;
+export type ImposeSanctionParams = __Infer<typeof ImposeSanctionReducer>;
 export type InitParams = __Infer<typeof InitReducer>;
+export type LiftSanctionParams = __Infer<typeof LiftSanctionReducer>;
 export type PlaceOfferParams = __Infer<typeof PlaceOfferReducer>;
 export type ResetMetaParams = __Infer<typeof ResetMetaReducer>;
 export type SetCountryProfileParams = __Infer<typeof SetCountryProfileReducer>;

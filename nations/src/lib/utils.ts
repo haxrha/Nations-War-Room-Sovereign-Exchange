@@ -87,3 +87,31 @@ export function priceChange(current: number, previous: number) {
   const direction = delta > 0.01 ? ('up' as const) : delta < -0.01 ? ('down' as const) : ('flat' as const)
   return { delta, pct, direction }
 }
+
+export type SanctionLike = {
+  issuerCountryId: bigint
+  targetCountryId: bigint
+  commodityId: bigint
+  active: boolean
+}
+
+export function isTradeSanctioned(
+  sanctions: readonly SanctionLike[],
+  partyA: bigint,
+  partyB: bigint,
+  commodityId: bigint,
+): boolean {
+  if (partyA === partyB) return false
+  for (const s of sanctions) {
+    if (!s.active) continue
+    const commOk = s.commodityId === 0n || s.commodityId === commodityId
+    if (!commOk) continue
+    if (
+      (s.issuerCountryId === partyA && s.targetCountryId === partyB) ||
+      (s.issuerCountryId === partyB && s.targetCountryId === partyA)
+    ) {
+      return true
+    }
+  }
+  return false
+}

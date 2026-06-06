@@ -1,6 +1,8 @@
 import { SenderError } from 'spacetimedb/server';
 import type { ModuleCtx } from '../schema';
 import { findResource, recalculateGdp } from './helpers';
+import { applyTradePriceImpact } from './pricing';
+import { isSanctioned } from './sanctions';
 
 export function executeTrade(
   ctx: ModuleCtx,
@@ -19,6 +21,10 @@ export function executeTrade(
   if (!seller) throw new SenderError('Seller not found');
 
   if (buyer.id === seller.id) throw new SenderError('Cannot trade with yourself');
+
+  if (isSanctioned(ctx, buyer.id, seller.id, offer.commodityId)) {
+    throw new SenderError('Trade blocked by active sanctions');
+  }
 
   const totalCost = offer.qty * offer.pricePerUnit;
   if (buyer.balance < totalCost) throw new SenderError('Insufficient funds');
@@ -53,6 +59,8 @@ export function executeTrade(
     price: offer.pricePerUnit,
     filledAt: ctx.timestamp,
   });
+
+  applyTradePriceImpact(ctx, offer.commodityId, offer.pricePerUnit, offer.qty);
 
   recalculateGdp(ctx, buyer.id);
   recalculateGdp(ctx, seller.id);

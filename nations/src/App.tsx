@@ -3,7 +3,7 @@ import { Header } from './components/layout/Header'
 import { TabBar, type AppTab } from './components/layout/TabBar'
 import { WorldMap } from './components/map/WorldMap'
 import { MarketPanel } from './components/market/MarketPanel'
-import { CountryDashboard } from './components/country/CountryDashboard'
+import { NationTab } from './components/country/NationTab'
 import { ExchangeTab } from './components/trading/ExchangeTab'
 import { Leaderboard } from './components/leaderboard/Leaderboard'
 import { AmbientBackground, ConnectionBanner } from './components/ui/Decorations'
@@ -57,7 +57,7 @@ function App() {
               tab === 'nation' ? 'block' : 'hidden',
             )}
           >
-            <CountryDashboard className="h-full" />
+            <NationTab />
           </div>
 
           <div

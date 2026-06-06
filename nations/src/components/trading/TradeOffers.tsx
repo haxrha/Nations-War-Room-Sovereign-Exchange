@@ -9,6 +9,7 @@ import {
   getCountry,
   commodityAccent,
   idStr,
+  isTradeSanctioned,
 } from '../../lib/utils'
 import { Panel, Badge } from '../ui/Panel'
 import { Button } from '../ui/Button'
@@ -76,14 +77,18 @@ function OfferRow({
   isOwn: boolean
   now: number
 }) {
-  const { countries, commodities, playerCountry, playerCountryId, acceptOffer, cancelOffer } =
+  const { countries, commodities, playerCountry, playerCountryId, acceptOffer, cancelOffer, activeSanctions } =
     useGame()
   const seller = getCountry(offer.sellerId, countries)
   const commodity = getCommodity(offer.commodityId, commodities)
   const accent = commodityAccent(commodity)
   const total = offer.qty * offer.pricePerUnit
+  const sanctioned =
+    playerCountryId != null &&
+    isTradeSanctioned(activeSanctions, playerCountryId, offer.sellerId, offer.commodityId)
   const canAccept =
     !isOwn &&
+    !sanctioned &&
     playerCountry != null &&
     playerCountry.balance >= total
 
@@ -119,11 +124,17 @@ function OfferRow({
       </div>
       {!isOwn && playerCountry && (
         <div className="mb-2 text-[10px] text-[#8A8F98]">
-          Treasury {formatMoney(playerCountry.balance)} ·{' '}
-          {canAccept ? (
-            <span className="text-emerald-400">affordable</span>
+          {sanctioned ? (
+            <span className="text-red-400">Trade blocked by sanctions</span>
           ) : (
-            <span className="text-red-400">need {formatMoney(total - playerCountry.balance)} more</span>
+            <>
+              Treasury {formatMoney(playerCountry.balance)} ·{' '}
+              {canAccept ? (
+                <span className="text-emerald-400">affordable</span>
+              ) : (
+                <span className="text-red-400">need {formatMoney(total - playerCountry.balance)} more</span>
+              )}
+            </>
           )}
         </div>
       )}
@@ -141,7 +152,7 @@ function OfferRow({
             disabled={!canAccept || playerCountryId == null}
           >
             <Handshake className="h-3 w-3" />
-            {canAccept ? `Accept · ${formatPrice(total)}` : 'Insufficient funds'}
+            {canAccept ? `Accept · ${formatPrice(total)}` : sanctioned ? 'Sanctioned' : 'Insufficient funds'}
           </Button>
         )}
       </div>

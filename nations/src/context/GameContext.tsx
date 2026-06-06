@@ -17,6 +17,7 @@ import type TradeHistoryRow from '../module_bindings/trade_history_table'
 import type SpotPriceRow from '../module_bindings/spot_price_table'
 import type CommodityRow from '../module_bindings/commodity_table'
 import type CountryResourceRow from '../module_bindings/country_resource_table'
+import type SanctionRow from '../module_bindings/sanction_table'
 import type { PricePoint } from '../lib/utils'
 
 export type Country = Infer<typeof CountryRow>
@@ -25,6 +26,7 @@ export type TradeHistory = Infer<typeof TradeHistoryRow>
 export type SpotPrice = Infer<typeof SpotPriceRow>
 export type Commodity = Infer<typeof CommodityRow>
 export type CountryResource = Infer<typeof CountryResourceRow>
+export type Sanction = Infer<typeof SanctionRow>
 
 interface GameContextValue {
   connected: boolean
@@ -33,11 +35,14 @@ interface GameContextValue {
   playerCountryId: bigint | null
   playerCountry: Country | null
   countries: readonly Country[]
+  onlineHumans: readonly Country[]
   commodities: readonly Commodity[]
   resources: readonly CountryResource[]
   offers: readonly TradeOffer[]
   spotPrices: readonly SpotPrice[]
   tradeHistory: readonly TradeHistory[]
+  sanctions: readonly Sanction[]
+  activeSanctions: readonly Sanction[]
   selectedCommodityId: bigint | null
   priceHistory: Record<string, PricePoint[]>
   now: number
@@ -46,6 +51,8 @@ interface GameContextValue {
   acceptOffer: (offerId: bigint) => Promise<void>
   cancelOffer: (offerId: bigint) => Promise<void>
   setCountryProfile: (name: string, isoCode: string) => Promise<void>
+  imposeSanction: (targetCountryId: bigint, commodityId: bigint, reason: string) => Promise<void>
+  liftSanction: (sanctionId: bigint) => Promise<void>
   setSelectedCommodity: (id: bigint) => void
 }
 
@@ -64,6 +71,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [spotPrices, spotReady] = useTable(tables.spotPrice)
   const [tradeHistory, historyReady] = useTable(tables.tradeHistory)
   const [players, playersReady] = useTable(tables.player)
+  const [sanctions, sanctionsReady] = useTable(tables.sanction)
 
   const [selectedCommodityId, setSelectedCommodityId] = useState<bigint | null>(null)
   const [priceHistory, setPriceHistory] = useState<Record<string, PricePoint[]>>({})
@@ -75,6 +83,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const acceptTradeReducer = useReducer(reducers.acceptTrade)
   const cancelOfferReducer = useReducer(reducers.cancelOffer)
   const setProfileReducer = useReducer(reducers.setCountryProfile)
+  const imposeSanctionReducer = useReducer(reducers.imposeSanction)
+  const liftSanctionReducer = useReducer(reducers.liftSanction)
 
   const tablesReady =
     countriesReady &&
@@ -83,7 +93,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     offersReady &&
     spotReady &&
     historyReady &&
-    playersReady
+    playersReady &&
+    sanctionsReady
 
   const playerCountryId = useMemo(() => {
     if (!identity) return null
@@ -94,6 +105,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const playerCountry = useMemo(
     () => (playerCountryId != null ? countries.find((c) => c.id === playerCountryId) ?? null : null),
     [countries, playerCountryId],
+  )
+
+  const onlineHumans = useMemo(
+    () => countries.filter((c) => !c.isBot && c.online),
+    [countries],
+  )
+
+  const activeSanctions = useMemo(
+    () => sanctions.filter((s) => s.active),
+    [sanctions],
   )
 
   useEffect(() => {
@@ -180,6 +201,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [setProfileReducer],
   )
 
+  const imposeSanction = useCallback(
+    async (targetCountryId: bigint, commodityId: bigint, reason: string) => {
+      setError(null)
+      try {
+        await imposeSanctionReducer({ targetCountryId, commodityId, reason })
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to impose sanction')
+      }
+    },
+    [imposeSanctionReducer],
+  )
+
+  const liftSanction = useCallback(
+    async (sanctionId: bigint) => {
+      setError(null)
+      try {
+        await liftSanctionReducer({ sanctionId })
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to lift sanction')
+      }
+    },
+    [liftSanctionReducer],
+  )
+
   const value = useMemo(
     (): GameContextValue => ({
       connected,
@@ -188,11 +233,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       playerCountryId,
       playerCountry,
       countries,
+      onlineHumans,
       commodities,
       resources,
       offers,
       spotPrices,
       tradeHistory: sortedHistory,
+      sanctions,
+      activeSanctions,
       selectedCommodityId,
       priceHistory,
       now,
@@ -201,6 +249,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       acceptOffer,
       cancelOffer,
       setCountryProfile,
+      imposeSanction,
+      liftSanction,
       setSelectedCommodity: setSelectedCommodityId,
     }),
     [
@@ -210,11 +260,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       playerCountryId,
       playerCountry,
       countries,
+      onlineHumans,
       commodities,
       resources,
       offers,
       spotPrices,
       sortedHistory,
+      sanctions,
+      activeSanctions,
       selectedCommodityId,
       priceHistory,
       now,
@@ -223,6 +276,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       acceptOffer,
       cancelOffer,
       setCountryProfile,
+      imposeSanction,
+      liftSanction,
     ],
   )
 

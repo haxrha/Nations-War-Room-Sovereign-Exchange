@@ -1,11 +1,11 @@
-import { Globe, Wifi, WifiOff } from 'lucide-react'
+import { Globe, Wifi, WifiOff, Users } from 'lucide-react'
 import { useGame } from '../../context/GameContext'
 import { formatMoney } from '../../lib/utils'
 import { Badge } from '../ui/Panel'
 import { cn } from '../../lib/cn'
 
 export function Header() {
-  const { playerCountry, connected, tablesReady, now } = useGame()
+  const { playerCountry, connected, tablesReady, now, onlineHumans } = useGame()
 
   return (
     <header className="relative z-50 shrink-0 border-b border-white/[0.06] bg-[#050506]/80 backdrop-blur-xl">
@@ -37,6 +37,12 @@ export function Header() {
           </Badge>
           {tablesReady && (
             <span className="live-dot hidden h-1.5 w-1.5 rounded-full bg-emerald-400 md:inline-block" />
+          )}
+          {onlineHumans.length > 0 && (
+            <Badge variant="accent">
+              <Users className="mr-1 h-3 w-3" />
+              {onlineHumans.length} online
+            </Badge>
           )}
         </div>
 

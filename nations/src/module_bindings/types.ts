@@ -68,6 +68,17 @@ export const PriceTickSchedule = __t.object("PriceTickSchedule", {
 });
 export type PriceTickSchedule = __Infer<typeof PriceTickSchedule>;
 
+export const Sanction = __t.object("Sanction", {
+  id: __t.u64(),
+  issuerCountryId: __t.u64(),
+  targetCountryId: __t.u64(),
+  commodityId: __t.u64(),
+  reason: __t.string(),
+  active: __t.bool(),
+  createdAt: __t.timestamp(),
+});
+export type Sanction = __Infer<typeof Sanction>;
+
 export const SpotPrice = __t.object("SpotPrice", {
   id: __t.u64(),
   commodityId: __t.u64(),

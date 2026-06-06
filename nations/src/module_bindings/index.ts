@@ -36,7 +36,9 @@ import {
 // Import all reducer arg schemas
 import AcceptTradeReducer from "./accept_trade_reducer";
 import CancelOfferReducer from "./cancel_offer_reducer";
+import ImposeSanctionReducer from "./impose_sanction_reducer";
 import InitReducer from "./init_reducer";
+import LiftSanctionReducer from "./lift_sanction_reducer";
 import PlaceOfferReducer from "./place_offer_reducer";
 import ResetMetaReducer from "./reset_meta_reducer";
 import SetCountryProfileReducer from "./set_country_profile_reducer";
@@ -48,6 +50,7 @@ import CommodityRow from "./commodity_table";
 import CountryRow from "./country_table";
 import CountryResourceRow from "./country_resource_table";
 import PlayerRow from "./player_table";
+import SanctionRow from "./sanction_table";
 import SpotPriceRow from "./spot_price_table";
 import TradeHistoryRow from "./trade_history_table";
 import TradeOfferRow from "./trade_offer_table";
@@ -117,6 +120,30 @@ const tablesSchema = __schema({
       { name: 'player_identity_key', constraint: 'unique', columns: ['identity'] },
     ],
   }, PlayerRow),
+  sanction: __table({
+    name: 'sanction',
+    indexes: [
+      { accessor: 'active', name: 'sanction_active_idx_btree', algorithm: 'btree', columns: [
+        'active',
+      ] },
+      { accessor: 'id', name: 'sanction_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'issuerCountryId', name: 'sanction_issuer_country_id_idx_btree', algorithm: 'btree', columns: [
+        'issuerCountryId',
+      ] },
+      { accessor: 'byIssuerAndTarget', name: 'sanction_issuer_country_id_target_country_id_idx_btree', algorithm: 'btree', columns: [
+        'issuerCountryId',
+        'targetCountryId',
+      ] },
+      { accessor: 'byTarget', name: 'sanction_target_country_id_idx_btree', algorithm: 'btree', columns: [
+        'targetCountryId',
+      ] },
+    ],
+    constraints: [
+      { name: 'sanction_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, SanctionRow),
   spotPrice: __table({
     name: 'spot_price',
     indexes: [
@@ -173,7 +200,9 @@ const tablesSchema = __schema({
 const reducersSchema = __reducers(
   __reducerSchema("accept_trade", AcceptTradeReducer),
   __reducerSchema("cancel_offer", CancelOfferReducer),
+  __reducerSchema("impose_sanction", ImposeSanctionReducer),
   __reducerSchema("init", InitReducer),
+  __reducerSchema("lift_sanction", LiftSanctionReducer),
   __reducerSchema("place_offer", PlaceOfferReducer),
   __reducerSchema("reset_meta", ResetMetaReducer),
   __reducerSchema("set_country_profile", SetCountryProfileReducer),

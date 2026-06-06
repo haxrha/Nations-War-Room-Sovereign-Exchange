@@ -7,6 +7,15 @@ import {
   requireCountryByIdentity,
 } from './lib/helpers';
 import { executeTrade } from './lib/trade';
+import { pickPlayerSpawn } from './lib/spawn';
+
+function countHumanCountries(ctx: Parameters<typeof findCountryByIdentity>[0]) {
+  let n = 0;
+  for (const c of ctx.db.country.iter()) {
+    if (!c.isBot) n++;
+  }
+  return n;
+}
 
 export const place_offer = spacetimedb.reducer(
   {
@@ -109,14 +118,17 @@ export const on_connect = spacetimedb.clientConnected((ctx) => {
     return;
   }
 
+  const humanIndex = countHumanCountries(ctx);
+  const spawn = pickPlayerSpawn(humanIndex);
+
   const countryRow = ctx.db.country.insert({
     id: 0n,
     name: 'New Player',
     isoCode: '???',
-    flag: '🏳️',
-    region: 'Unassigned',
-    lat: 38.9,
-    lng: -77.0,
+    flag: spawn.flag,
+    region: spawn.region,
+    lat: spawn.lat,
+    lng: spawn.lng,
     isBot: false,
     botStrategy: '',
     balance: 100_000,
