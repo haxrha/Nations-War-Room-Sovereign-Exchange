@@ -4,17 +4,22 @@ import { useGame } from '../../context/GameContext'
 import { formatMoney, getCountry, botStrategyLabel, idStr } from '../../lib/utils'
 import { Panel } from '../ui/Panel'
 import { tokens } from '../../lib/design-system'
+import { cn } from '../../lib/cn'
 
-function MapResizer() {
+function MapResizer({ active }: { active?: boolean }) {
   const map = useMap()
   useEffect(() => {
     const t = setTimeout(() => map.invalidateSize(), 100)
-    return () => clearTimeout(t)
-  }, [map])
+    const t2 = setTimeout(() => map.invalidateSize(), 350)
+    return () => {
+      clearTimeout(t)
+      clearTimeout(t2)
+    }
+  }, [map, active])
   return null
 }
 
-export function WorldMap() {
+export function WorldMap({ active = true, className }: { active?: boolean; className?: string }) {
   const { countries, offers, playerCountryId, commodities } = useGame()
 
   const offerArcs = useMemo(() => {
@@ -36,18 +41,18 @@ export function WorldMap() {
       subtitle={`${countries.length} nations · ${onlineCount} online · ${offers.length} open offers`}
       label="Geography"
       spotlight
-      className="min-h-[320px]"
+      className={cn('h-full min-h-0', className)}
     >
-      <div className="relative min-h-[280px] flex-1 lg:min-h-0">
+      <div className="relative min-h-0 flex-1">
         <MapContainer
           center={[20, 10]}
           zoom={2}
           minZoom={2}
           maxZoom={6}
-          className="h-full w-full"
+          className="absolute inset-0 h-full w-full"
           zoomControl={false}
         >
-          <MapResizer />
+          <MapResizer active={active} />
           <TileLayer
             attribution='&copy; OSM'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

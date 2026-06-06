@@ -6,12 +6,12 @@ import { cn } from '../../lib/cn'
 
 const MEDAL = ['🥇', '🥈', '🥉']
 
-export function Leaderboard() {
+export function Leaderboard({ className }: { className?: string }) {
   const { countries, playerCountryId } = useGame()
   const rankings = computeRankings(countries)
 
   return (
-    <Panel title="Leaderboard" subtitle="GDP score ranking" label="Rankings" spotlight>
+    <Panel title="Leaderboard" subtitle="GDP score ranking" label="Rankings" spotlight className={cn('h-full min-h-0', className)}>
       <div className="scroll-subtle min-h-0 flex-1 overflow-y-auto p-3">
         {rankings.map((entry, i) => {
           const country = getCountry(entry.countryId, countries)

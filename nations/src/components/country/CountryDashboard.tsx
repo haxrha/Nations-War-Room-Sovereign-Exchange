@@ -13,7 +13,9 @@ import {
 import { Panel, StatPill } from '../ui/Panel'
 import { Button, Input, Select } from '../ui/Button'
 
-export function CountryDashboard() {
+import { cn } from '../../lib/cn'
+
+export function CountryDashboard({ className }: { className?: string }) {
   const {
     playerCountry,
     playerCountryId,
@@ -28,7 +30,7 @@ export function CountryDashboard() {
   } = useGame()
 
   const [commodityId, setCommodityId] = useState<bigint | null>(selectedCommodityId)
-  const [qty, setQty] = useState('100000')
+  const [qty, setQty] = useState('50')
   const [price, setPrice] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileName, setProfileName] = useState('')
@@ -78,7 +80,7 @@ export function CountryDashboard() {
     const parsedPrice = parseFloat(price || String(defaultPrice))
     if (parsedQty > 0 && parsedPrice > 0) {
       await placeOffer(activeCommodityId, parsedQty, parsedPrice)
-      setQty('100000')
+      setQty('50')
       setPrice('')
     }
   }
@@ -95,6 +97,7 @@ export function CountryDashboard() {
       subtitle={`${playerCountry.flag} ${playerCountry.name}`}
       label="Portfolio"
       spotlight
+      className={cn('h-full min-h-0', className)}
       headerExtra={
         needsProfile || profileOpen ? (
           <Button
@@ -112,119 +115,124 @@ export function CountryDashboard() {
         ) : null
       }
     >
-      {(needsProfile || profileOpen) && (
+      <div className="flex min-h-0 flex-1 flex-col">
+        {(needsProfile || profileOpen) && (
+          <form
+            onSubmit={handleProfile}
+            className="shrink-0 border-b border-white/[0.06] bg-[#5E6AD2]/10 p-4"
+          >
+            <p className="mb-3 text-xs text-[#8A8F98]">Name your nation to appear on the map</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Input
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Country name"
+                required
+              />
+              <Input
+                value={profileIso}
+                onChange={(e) => setProfileIso(e.target.value)}
+                placeholder="ISO (e.g. USA)"
+                maxLength={3}
+              />
+            </div>
+            <Button type="submit" size="sm" className="mt-2">
+              Save profile
+            </Button>
+          </form>
+        )}
+
+        <div className="shrink-0 grid grid-cols-2 gap-3 p-4">
+          <StatPill label="Treasury" value={formatMoney(playerCountry.balance, true)} />
+          <StatPill label="GDP Score" value={formatMoney(playerCountry.gdpScore, true)} />
+          <StatPill label="Region" value={playerCountry.region} />
+          <StatPill label="Status" value={playerCountry.online ? 'Online' : 'Offline'} />
+        </div>
+
+        <div className="scroll-subtle min-h-0 flex-1 overflow-y-auto border-y border-white/[0.06] px-4 py-3">
+          <div className="font-mono-label mb-3 text-[10px] uppercase tracking-widest text-[#8A8F98]">
+            Resource stockpile
+          </div>
+          {holdings.length === 0 ? (
+            <p className="text-xs text-[#8A8F98]">No resources yet — buy from the market</p>
+          ) : (
+            <div className="space-y-2">
+              {holdings.map(({ commodity: c, qty: q, spot: s }) => (
+                <div
+                  key={idStr(c.id)}
+                  className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 transition-transform duration-300 hover:-translate-y-0.5"
+                  style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border text-[10px] font-semibold"
+                      style={{
+                        borderColor: `${commodityAccent(c)}40`,
+                        color: commodityAccent(c),
+                      }}
+                    >
+                      {c.symbol}
+                    </span>
+                    <span className="text-sm text-[#EDEDEF]">{c.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-semibold">
+                      {formatQty(q)} {c.unit}
+                    </div>
+                    <div className="text-[10px] text-[#8A8F98]">
+                      @ {formatPrice(s?.price ?? c.basePrice)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <form
-          onSubmit={handleProfile}
-          className="border-b border-white/[0.06] bg-[#5E6AD2]/10 p-4"
+          onSubmit={handleSubmit}
+          className="shrink-0 space-y-3 border-t border-white/[0.06] bg-[#050506]/60 p-4 backdrop-blur-sm"
         >
-          <p className="mb-3 text-xs text-[#8A8F98]">Name your nation to appear on the map</p>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="font-mono-label text-[10px] uppercase tracking-widest text-[#8A8F98]">
+            Post sell offer
+          </div>
+          <Select
+            value={activeCommodityId?.toString() ?? ''}
+            onChange={(e) => setCommodityId(BigInt(e.target.value))}
+          >
+            {commodities.map((c) => (
+              <option key={idStr(c.id)} value={idStr(c.id)}>
+                {c.symbol} — {c.name}
+              </option>
+            ))}
+          </Select>
+          <div className="grid grid-cols-2 gap-2">
             <Input
-              value={profileName}
-              onChange={(e) => setProfileName(e.target.value)}
-              placeholder="Country name"
-              required
+              type="number"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              placeholder="Quantity"
+              min={1}
             />
             <Input
-              value={profileIso}
-              onChange={(e) => setProfileIso(e.target.value)}
-              placeholder="ISO (e.g. USA)"
-              maxLength={3}
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder={defaultPrice.toFixed(2)}
+              step="0.01"
+              min={0.01}
             />
           </div>
-          <Button type="submit" size="sm" className="mt-2">
-            Save profile
+          <p className="text-[10px] text-[#8A8F98]">
+            Available: {formatQty(stock)} {commodity?.unit ?? ''} · stock escrowed on listing
+          </p>
+          {error && <p className="text-xs text-red-400">{error}</p>}
+          <Button type="submit" size="lg" className="w-full" disabled={!connected || stock <= 0}>
+            <Send className="h-4 w-4" />
+            Post to exchange
           </Button>
         </form>
-      )}
-
-      <div className="grid grid-cols-2 gap-3 p-4">
-        <StatPill label="Treasury" value={formatMoney(playerCountry.balance, true)} />
-        <StatPill label="GDP Score" value={formatMoney(playerCountry.gdpScore, true)} />
-        <StatPill label="Region" value={playerCountry.region} />
-        <StatPill label="Status" value={playerCountry.online ? 'Online' : 'Offline'} />
       </div>
-
-      <div className="scroll-subtle min-h-0 flex-1 overflow-y-auto border-y border-white/[0.06] px-4 py-3">
-        <div className="font-mono-label mb-3 text-[10px] uppercase tracking-widest text-[#8A8F98]">
-          Resource stockpile
-        </div>
-        {holdings.length === 0 ? (
-          <p className="text-xs text-[#8A8F98]">No resources yet — buy from the market</p>
-        ) : (
-          <div className="space-y-2">
-            {holdings.map(({ commodity: c, qty: q, spot: s }) => (
-              <div
-                key={idStr(c.id)}
-                className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 transition-transform duration-300 hover:-translate-y-0.5"
-                style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border text-[10px] font-semibold"
-                    style={{
-                      borderColor: `${commodityAccent(c)}40`,
-                      color: commodityAccent(c),
-                    }}
-                  >
-                    {c.symbol}
-                  </span>
-                  <span className="text-sm text-[#EDEDEF]">{c.name}</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold">
-                    {formatQty(q)} {c.unit}
-                  </div>
-                  <div className="text-[10px] text-[#8A8F98]">
-                    @ {formatPrice(s?.price ?? c.basePrice)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-3 p-4">
-        <div className="font-mono-label text-[10px] uppercase tracking-widest text-[#8A8F98]">
-          Post sell offer
-        </div>
-        <Select
-          value={activeCommodityId?.toString() ?? ''}
-          onChange={(e) => setCommodityId(BigInt(e.target.value))}
-        >
-          {commodities.map((c) => (
-            <option key={idStr(c.id)} value={idStr(c.id)}>
-              {c.symbol} — {c.name}
-            </option>
-          ))}
-        </Select>
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="number"
-            value={qty}
-            onChange={(e) => setQty(e.target.value)}
-            placeholder="Quantity"
-            min={1}
-          />
-          <Input
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder={defaultPrice.toFixed(2)}
-            step="0.01"
-            min={0.01}
-          />
-        </div>
-        <p className="text-[10px] text-[#8A8F98]">
-          Available: {formatQty(stock)} {commodity?.unit ?? ''} · stock escrowed on listing
-        </p>
-        {error && <p className="text-xs text-red-400">{error}</p>}
-        <Button type="submit" size="lg" className="w-full" disabled={!connected || stock <= 0}>
-          <Send className="h-4 w-4" />
-          Post to exchange
-        </Button>
-      </form>
     </Panel>
   )
 }

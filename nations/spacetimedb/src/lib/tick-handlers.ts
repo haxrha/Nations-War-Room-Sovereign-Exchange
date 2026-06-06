@@ -4,7 +4,7 @@ import {
   recentFillsForCommodity,
   recalculateAllGdp,
 } from './helpers';
-import { runBotStrategy } from '../bots';
+import { cancelOversizedBotOffers, runBotStrategy } from '../bots';
 
 export function runPriceTick(ctx: ModuleCtx): void {
   const thirtySecondsAgo = ctx.timestamp.microsSinceUnixEpoch - 30_000_000n;
@@ -33,6 +33,8 @@ export function runPriceTick(ctx: ModuleCtx): void {
 }
 
 export function runBotTick(ctx: ModuleCtx): void {
+  cancelOversizedBotOffers(ctx);
+
   for (const bot of ctx.db.country.isBot.filter(true)) {
     for (const resource of ctx.db.countryResource.countryId.filter(bot.id)) {
       ctx.db.countryResource.id.update({

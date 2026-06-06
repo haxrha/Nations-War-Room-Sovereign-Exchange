@@ -119,8 +119,8 @@ export const on_connect = spacetimedb.clientConnected((ctx) => {
     lng: -77.0,
     isBot: false,
     botStrategy: '',
-    balance: 10_000,
-    gdpScore: 10_000,
+    balance: 100_000,
+    gdpScore: 100_000,
     online: true,
   });
 

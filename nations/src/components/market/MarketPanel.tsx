@@ -20,7 +20,7 @@ import { Panel } from '../ui/Panel'
 import { Button } from '../ui/Button'
 import { cn } from '../../lib/cn'
 
-export function MarketPanel() {
+export function MarketPanel({ className }: { className?: string }) {
   const {
     commodities,
     spotPrices,
@@ -57,7 +57,7 @@ export function MarketPanel() {
   const doubledTicker = [...tickerItems, ...tickerItems]
 
   return (
-    <Panel title="Market" subtitle="Global commodity spot prices" label="Prices" spotlight>
+    <Panel title="Market" subtitle="Global commodity spot prices" label="Prices" spotlight className={cn('h-full min-h-0', className)}>
       <div className="overflow-hidden border-b border-white/[0.06] bg-white/[0.02] py-2.5">
         <div className="ticker-track flex w-max gap-10 px-5">
           {doubledTicker.map((item, i) => (
@@ -132,7 +132,7 @@ export function MarketPanel() {
         </div>
       </div>
 
-      <div className="min-h-[140px] flex-1 p-4">
+      <div className="min-h-[160px] flex-1 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <XAxis

@@ -4,6 +4,7 @@ import {
   formatPrice,
   formatQty,
   formatTimeAgo,
+  formatMoney,
   getCommodity,
   getCountry,
   commodityAccent,
@@ -12,14 +13,17 @@ import {
 import { Panel, Badge } from '../ui/Panel'
 import { Button } from '../ui/Button'
 
-export function TradeOffers() {
+import { cn } from '../../lib/cn'
+
+export function TradeOffers({ className }: { className?: string }) {
   const { offers, playerCountryId, now } = useGame()
   const myOffers = playerCountryId != null
     ? offers.filter((o) => o.sellerId === playerCountryId)
     : []
-  const marketOffers = playerCountryId != null
+  const marketOffers = (playerCountryId != null
     ? offers.filter((o) => o.sellerId !== playerCountryId)
     : offers
+  ).slice().sort((a, b) => a.qty * a.pricePerUnit - b.qty * b.pricePerUnit)
 
   return (
     <Panel
@@ -27,6 +31,7 @@ export function TradeOffers() {
       subtitle={`${offers.length} open listings`}
       label="Order book"
       spotlight
+      className={cn('h-full min-h-0', className)}
     >
       <div className="scroll-subtle min-h-0 flex-1 overflow-y-auto p-3">
         {marketOffers.length === 0 && myOffers.length === 0 ? (
@@ -103,12 +108,25 @@ function OfferRow({
           </div>
         </div>
         <div className="text-right">
-          <div className="text-base font-semibold">{formatPrice(offer.pricePerUnit)}</div>
+          <div className="text-base font-semibold">{formatPrice(offer.pricePerUnit)}/u</div>
           <div className="text-[10px] text-[#8A8F98]">
-            {formatQty(offer.qty)} · {formatTimeAgo(offer.createdAt.microsSinceUnixEpoch, now)}
+            {formatQty(offer.qty)} · total {formatMoney(total)}
+          </div>
+          <div className="text-[10px] text-[#8A8F98]">
+            {formatTimeAgo(offer.createdAt.microsSinceUnixEpoch, now)}
           </div>
         </div>
       </div>
+      {!isOwn && playerCountry && (
+        <div className="mb-2 text-[10px] text-[#8A8F98]">
+          Treasury {formatMoney(playerCountry.balance)} ·{' '}
+          {canAccept ? (
+            <span className="text-emerald-400">affordable</span>
+          ) : (
+            <span className="text-red-400">need {formatMoney(total - playerCountry.balance)} more</span>
+          )}
+        </div>
+      )}
       <div className="mt-3">
         {isOwn ? (
           <Button variant="danger" size="sm" className="w-full" onClick={() => cancelOffer(offer.id)}>
@@ -131,16 +149,16 @@ function OfferRow({
   )
 }
 
-export function RecentTrades() {
+export function RecentTrades({ className, limit = 8 }: { className?: string; limit?: number }) {
   const { tradeHistory, countries, commodities, now } = useGame()
 
   return (
-    <Panel title="Recent Trades" subtitle="Fill feed" label="Activity" spotlight>
+    <Panel title="Recent Trades" subtitle="Fill feed" label="Activity" spotlight className={cn('h-full min-h-0', className)}>
       <div className="scroll-subtle min-h-0 flex-1 overflow-y-auto p-3">
         {tradeHistory.length === 0 ? (
           <div className="p-6 text-center text-xs text-[#8A8F98]">No trades yet</div>
         ) : (
-          tradeHistory.slice(0, 8).map((trade) => {
+          tradeHistory.slice(0, limit).map((trade) => {
             const seller = getCountry(trade.sellerId, countries)
             const buyer = getCountry(trade.buyerId, countries)
             const commodity = getCommodity(trade.commodityId, commodities)
