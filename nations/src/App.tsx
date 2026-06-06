@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Header } from './components/layout/Header'
 import { TabBar, type AppTab } from './components/layout/TabBar'
-import { WorldMap } from './components/map/WorldMap'
+import { WorldGlobe } from './components/map/WorldGlobe'
 import { FlightMap } from './components/flight/FlightMap'
 import { MarketPanel } from './components/market/MarketPanel'
 import { NationTab } from './components/country/NationTab'
@@ -32,7 +32,7 @@ function App() {
               tab === 'world' ? 'block' : 'hidden',
             )}
           >
-            <WorldMap active={tab === 'world'} className="h-full" />
+            <WorldGlobe active={tab === 'world'} className="h-full" />
           </div>
 
           <div
