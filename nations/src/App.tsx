@@ -6,6 +6,7 @@ import { MarketPanel } from './components/market/MarketPanel'
 import { NationTab } from './components/country/NationTab'
 import { ExchangeTab } from './components/trading/ExchangeTab'
 import { Leaderboard } from './components/leaderboard/Leaderboard'
+import { BotTab } from './components/bots/BotTab'
 import { AmbientBackground, ConnectionBanner } from './components/ui/Decorations'
 import { useGame } from './context/GameContext'
 import { cn } from './lib/cn'
@@ -58,6 +59,15 @@ function App() {
             )}
           >
             <NationTab />
+          </div>
+
+          <div
+            className={cn(
+              'mx-auto h-full max-w-3xl',
+              tab === 'bots' ? 'block' : 'hidden',
+            )}
+          >
+            <BotTab />
           </div>
 
           <div

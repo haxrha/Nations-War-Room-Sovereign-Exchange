@@ -1,4 +1,5 @@
 import {
+  Bot,
   Globe,
   TrendingUp,
   Handshake,
@@ -8,13 +9,14 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/cn'
 
-export type AppTab = 'world' | 'market' | 'exchange' | 'nation' | 'ranks'
+export type AppTab = 'world' | 'market' | 'exchange' | 'nation' | 'bots' | 'ranks'
 
 const TABS: { id: AppTab; label: string; shortLabel: string; icon: LucideIcon }[] = [
   { id: 'world', label: 'World', shortLabel: 'Map', icon: Globe },
   { id: 'market', label: 'Market', shortLabel: 'Market', icon: TrendingUp },
   { id: 'exchange', label: 'Exchange', shortLabel: 'Trade', icon: Handshake },
   { id: 'nation', label: 'Nation', shortLabel: 'Nation', icon: Landmark },
+  { id: 'bots', label: 'Bots', shortLabel: 'Bots', icon: Bot },
   { id: 'ranks', label: 'Ranks', shortLabel: 'Ranks', icon: Trophy },
 ]
 

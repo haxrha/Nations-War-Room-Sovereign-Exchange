@@ -28,7 +28,7 @@ export type Commodity = Infer<typeof CommodityRow>
 export type CountryResource = Infer<typeof CountryResourceRow>
 export type Sanction = Infer<typeof SanctionRow>
 
-interface GameContextValue {
+export interface GameContextValue {
   connected: boolean
   connecting: boolean
   error: string | null

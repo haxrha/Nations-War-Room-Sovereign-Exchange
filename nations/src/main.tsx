@@ -4,13 +4,16 @@ import { SpacetimeDBProvider } from 'spacetimedb/react'
 import './index.css'
 import App from './App.tsx'
 import { GameProvider } from './context/GameContext'
+import { BotProvider } from './context/BotContext'
 import { connectionBuilder } from './lib/spacetime'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SpacetimeDBProvider connectionBuilder={connectionBuilder}>
       <GameProvider>
-        <App />
+        <BotProvider>
+          <App />
+        </BotProvider>
       </GameProvider>
     </SpacetimeDBProvider>
   </StrictMode>,
