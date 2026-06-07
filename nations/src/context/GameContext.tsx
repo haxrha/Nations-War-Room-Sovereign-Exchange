@@ -59,6 +59,9 @@ export interface GameContextValue {
 
 const GameContext = createContext<GameContextValue | null>(null)
 
+const PRICE_HISTORY_MAX = 300
+const CHART_SAMPLE_MS = 1000
+
 export function GameProvider({ children }: { children: ReactNode }) {
   const { identity, isActive: connected } = useSpacetimeDB()
   const connecting = false
@@ -78,7 +81,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [priceHistory, setPriceHistory] = useState<Record<string, PricePoint[]>>({})
   const [error, setError] = useState<string | null>(null)
   const [now, setNow] = useState(() => Date.now())
-  const prevSpotRef = useRef<Map<string, number>>(new Map())
+  const spotPricesRef = useRef(spotPrices)
+  spotPricesRef.current = spotPrices
 
   const placeOfferReducer = useReducer(reducers.placeOffer)
   const acceptTradeReducer = useReducer(reducers.acceptTrade)
@@ -130,21 +134,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t)
   }, [])
 
+  /** Sample live spot prices every second so the market chart always advances. */
   useEffect(() => {
-    const ts = Date.now()
-    setPriceHistory((prev) => {
-      let next = prev
-      for (const spot of spotPrices) {
-        const key = spot.commodityId.toString()
-        const prevPrice = prevSpotRef.current.get(key)
-        if (prevPrice === spot.price) continue
-        prevSpotRef.current.set(key, spot.price)
-        const history = [...(next[key] ?? []), { timestamp: ts, price: spot.price }].slice(-30)
-        next = { ...next, [key]: history }
-      }
-      return next
-    })
-  }, [spotPrices])
+    if (!tablesReady) return
+
+    const appendSample = () => {
+      const spots = spotPricesRef.current
+      if (spots.length === 0) return
+
+      const ts = Date.now()
+      const tickKey = `s-${ts}`
+
+      setPriceHistory((prev) => {
+        let next = { ...prev }
+        for (const spot of spots) {
+          const key = spot.commodityId.toString()
+          next[key] = [
+            ...(next[key] ?? []),
+            { timestamp: ts, price: spot.price, serverTick: tickKey },
+          ].slice(-PRICE_HISTORY_MAX)
+        }
+        return next
+      })
+    }
+
+    appendSample()
+    const id = setInterval(appendSample, CHART_SAMPLE_MS)
+    return () => clearInterval(id)
+  }, [tablesReady])
 
   const sortedHistory = useMemo(
     () =>
@@ -173,7 +190,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       try {
         await acceptTradeReducer({ offerId })
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to accept trade')
+        const msg = e instanceof Error ? e.message : 'Failed to accept trade'
+        setError(msg)
+        throw e
       }
     },
     [acceptTradeReducer],
@@ -232,7 +251,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     try {
       await resetWorldReducer()
       setPriceHistory({})
-      prevSpotRef.current.clear()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to reset world')
       throw e

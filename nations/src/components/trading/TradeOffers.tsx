@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Handshake, X } from 'lucide-react'
 import { useGame } from '../../context/GameContext'
 import {
@@ -11,12 +12,19 @@ import {
   idStr,
   isTradeSanctioned,
 } from '../../lib/utils'
+import { buildTradeExplainRequest } from '../../lib/buildTradeExplainContext'
+import type { ExplainTradeRequest } from '../../lib/trade-explain-types'
 import { Panel, Badge } from '../ui/Panel'
 import { Button } from '../ui/Button'
-
 import { cn } from '../../lib/cn'
 
-export function TradeOffers({ className }: { className?: string }) {
+export function TradeOffers({
+  className,
+  onTradeAccepted,
+}: {
+  className?: string
+  onTradeAccepted?: (payload: ExplainTradeRequest) => void
+}) {
   const { offers, playerCountryId, now } = useGame()
   const myOffers = playerCountryId != null
     ? offers.filter((o) => o.sellerId === playerCountryId)
@@ -47,7 +55,13 @@ export function TradeOffers({ className }: { className?: string }) {
                   Global market
                 </div>
                 {marketOffers.map((offer) => (
-                  <OfferRow key={idStr(offer.id)} offer={offer} isOwn={false} now={now} />
+                  <OfferRow
+                    key={idStr(offer.id)}
+                    offer={offer}
+                    isOwn={false}
+                    now={now}
+                    onTradeAccepted={onTradeAccepted}
+                  />
                 ))}
               </div>
             )}
@@ -72,13 +86,24 @@ function OfferRow({
   offer,
   isOwn,
   now,
+  onTradeAccepted,
 }: {
   offer: ReturnType<typeof useGame>['offers'][number]
   isOwn: boolean
   now: number
+  onTradeAccepted?: (payload: ExplainTradeRequest) => void
 }) {
-  const { countries, commodities, playerCountry, playerCountryId, acceptOffer, cancelOffer, activeSanctions } =
-    useGame()
+  const game = useGame()
+  const {
+    countries,
+    commodities,
+    playerCountry,
+    playerCountryId,
+    acceptOffer,
+    cancelOffer,
+    activeSanctions,
+  } = game
+  const [accepting, setAccepting] = useState(false)
   const seller = getCountry(offer.sellerId, countries)
   const commodity = getCommodity(offer.commodityId, commodities)
   const accent = commodityAccent(commodity)
@@ -91,6 +116,20 @@ function OfferRow({
     !sanctioned &&
     playerCountry != null &&
     playerCountry.balance >= total
+
+  const handleAccept = async () => {
+    if (!canAccept || playerCountryId == null) return
+    const payload = buildTradeExplainRequest(offer, game)
+    setAccepting(true)
+    try {
+      await acceptOffer(offer.id)
+      if (payload && onTradeAccepted) onTradeAccepted(payload)
+    } catch {
+      /* error surfaced via GameContext */
+    } finally {
+      setAccepting(false)
+    }
+  }
 
   return (
     <div
@@ -148,11 +187,17 @@ function OfferRow({
             variant={canAccept ? 'primary' : 'secondary'}
             size="sm"
             className="w-full"
-            onClick={() => acceptOffer(offer.id)}
-            disabled={!canAccept || playerCountryId == null}
+            onClick={() => void handleAccept()}
+            disabled={!canAccept || playerCountryId == null || accepting}
           >
             <Handshake className="h-3 w-3" />
-            {canAccept ? `Accept · ${formatPrice(total)}` : sanctioned ? 'Sanctioned' : 'Insufficient funds'}
+            {accepting
+              ? 'Processing…'
+              : canAccept
+                ? `Accept · ${formatPrice(total)}`
+                : sanctioned
+                  ? 'Sanctioned'
+                  : 'Insufficient funds'}
           </Button>
         )}
       </div>

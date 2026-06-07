@@ -5,7 +5,7 @@ import { formatMoney } from '../../lib/utils'
 import { Badge } from '../ui/Panel'
 import { cn } from '../../lib/cn'
 
-export function Header() {
+export function Header({ onOpenProfile }: { onOpenProfile?: () => void }) {
   const { playerCountry, connected, tablesReady, now, onlineHumans, resetWorld } = useGame()
   const [resetting, setResetting] = useState(false)
 
@@ -86,11 +86,15 @@ export function Header() {
           </button>
 
         {playerCountry && (
-          <div
+          <button
+            type="button"
+            onClick={onOpenProfile}
             className={cn(
-              'flex items-center gap-4 rounded-lg border border-[#1a9e75]/15 bg-[#0f1729]/80 px-4 py-2',
+              'flex items-center gap-4 rounded-lg border border-[#1a9e75]/15 bg-[#0f1729]/80 px-4 py-2 text-left',
               'transition-all duration-300 hover:border-[#2dd4bf]/30 hover:shadow-[0_0_20px_rgba(45,212,191,0.08)]',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2dd4bf]/40',
             )}
+            aria-label="Open profile"
           >
             <div className="text-2xl">{playerCountry.flag}</div>
             <div>
@@ -108,7 +112,7 @@ export function Header() {
             <div className="hidden font-mono text-[10px] tabular-nums text-[#64748b] md:block">
               {new Date(now).toLocaleTimeString()}
             </div>
-          </div>
+          </button>
         )}
         </div>
       </div>

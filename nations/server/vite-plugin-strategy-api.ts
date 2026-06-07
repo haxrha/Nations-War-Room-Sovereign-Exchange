@@ -1,7 +1,11 @@
 import type { Plugin } from 'vite'
 import { loadEnv } from 'vite'
 import type { GenerateStrategyRequest } from '../src/lib/strategy-api-types.ts'
+import type { ExplainTradeRequest } from '../src/lib/trade-explain-types.ts'
+import type { ProfileAnalyticsRequest } from '../src/lib/profile-analytics-types.ts'
 import { handleStrategyGenerate } from './strategy/generate.ts'
+import { handleTradeExplain } from './trade/explain.ts'
+import { handleProfileAnalytics } from './profile/analytics.ts'
 
 function readJsonBody(req: import('http').IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -19,6 +23,14 @@ function readJsonBody(req: import('http').IncomingMessage): Promise<unknown> {
   })
 }
 
+function clientKeyFromReq(req: import('http').IncomingMessage): string {
+  return (
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
+    req.socket.remoteAddress ??
+    'local'
+  )
+}
+
 export function strategyApiPlugin(): Plugin {
   return {
     name: 'nations-strategy-api',
@@ -27,36 +39,87 @@ export function strategyApiPlugin(): Plugin {
       const apiKey = env.GEMINI_API_KEY ?? process.env.GEMINI_API_KEY ?? ''
 
       server.middlewares.use(async (req, res, next) => {
-        if (!req.url?.startsWith('/api/strategy/generate') || req.method !== 'POST') {
-          next()
+        const url = req.url?.split('?')[0] ?? ''
+
+        if (url === '/api/strategy/generate' && req.method === 'POST') {
+          res.setHeader('Content-Type', 'application/json')
+          try {
+            const body = (await readJsonBody(req)) as GenerateStrategyRequest
+            const result = await handleStrategyGenerate(body, {
+              apiKey,
+              clientKey: clientKeyFromReq(req),
+            })
+            res.statusCode = result.ok ? 200 : 400
+            res.end(JSON.stringify(result))
+          } catch {
+            res.statusCode = 500
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error: {
+                  code: 'SERVER_ERROR',
+                  message: 'Failed to process strategy request',
+                  retryable: true,
+                },
+              }),
+            )
+          }
           return
         }
 
-        res.setHeader('Content-Type', 'application/json')
-
-        try {
-          const body = (await readJsonBody(req)) as GenerateStrategyRequest
-          const clientKey =
-            (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
-            req.socket.remoteAddress ??
-            'local'
-
-          const result = await handleStrategyGenerate(body, { apiKey, clientKey })
-          res.statusCode = result.ok ? 200 : 400
-          res.end(JSON.stringify(result))
-        } catch {
-          res.statusCode = 500
-          res.end(
-            JSON.stringify({
-              ok: false,
-              error: {
-                code: 'SERVER_ERROR',
-                message: 'Failed to process strategy request',
-                retryable: true,
-              },
-            }),
-          )
+        if (url === '/api/trade/explain' && req.method === 'POST') {
+          res.setHeader('Content-Type', 'application/json')
+          try {
+            const body = (await readJsonBody(req)) as ExplainTradeRequest
+            const result = await handleTradeExplain(body, {
+              apiKey,
+              clientKey: clientKeyFromReq(req),
+            })
+            res.statusCode = result.ok ? 200 : 400
+            res.end(JSON.stringify(result))
+          } catch {
+            res.statusCode = 500
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error: {
+                  code: 'SERVER_ERROR',
+                  message: 'Failed to explain trade',
+                  retryable: true,
+                },
+              }),
+            )
+          }
+          return
         }
+
+        if (url === '/api/profile/analytics' && req.method === 'POST') {
+          res.setHeader('Content-Type', 'application/json')
+          try {
+            const body = (await readJsonBody(req)) as ProfileAnalyticsRequest
+            const result = await handleProfileAnalytics(body, {
+              apiKey,
+              clientKey: clientKeyFromReq(req),
+            })
+            res.statusCode = result.ok ? 200 : 400
+            res.end(JSON.stringify(result))
+          } catch {
+            res.statusCode = 500
+            res.end(
+              JSON.stringify({
+                ok: false,
+                error: {
+                  code: 'SERVER_ERROR',
+                  message: 'Failed to generate profile analytics',
+                  retryable: true,
+                },
+              }),
+            )
+          }
+          return
+        }
+
+        next()
       })
     },
   }

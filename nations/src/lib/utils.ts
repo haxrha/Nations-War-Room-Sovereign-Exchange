@@ -79,6 +79,8 @@ export function commodityAccent(commodity: Commodity | undefined): string {
 export interface PricePoint {
   timestamp: number
   price: number
+  /** SpacetimeDB spot_price.updated_at — one point per server tick */
+  serverTick?: string
 }
 
 export function priceChange(current: number, previous: number) {

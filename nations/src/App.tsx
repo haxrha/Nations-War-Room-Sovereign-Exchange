@@ -9,6 +9,7 @@ import { NationTab } from './components/country/NationTab'
 import { ExchangeTab } from './components/trading/ExchangeTab'
 import { Leaderboard } from './components/leaderboard/Leaderboard'
 import { BotTab } from './components/bots/BotTab'
+import { ProfileScreen } from './components/profile/ProfileScreen'
 import { AmbientBackground, ConnectionBanner } from './components/ui/Decorations'
 import { useGame } from './context/GameContext'
 import { cn } from './lib/cn'
@@ -16,6 +17,7 @@ import { cn } from './lib/cn'
 function App() {
   const { connected, connecting, offers } = useGame()
   const [tab, setTab] = useState<AppTab>('exchange')
+  const [profileOpen, setProfileOpen] = useState(false)
 
   return (
     <div className="app-shell relative flex h-full flex-col overflow-hidden">
@@ -23,7 +25,7 @@ function App() {
       <ConnectionBanner connected={connected} connecting={connecting} />
 
       <div className="relative z-10 flex h-full min-h-0 flex-col">
-        <Header />
+        <Header onOpenProfile={() => setProfileOpen(true)} />
         <PriceTickerBar />
         <TabBar active={tab} onChange={setTab} offerCount={offers.length} />
 
@@ -51,6 +53,8 @@ function App() {
           </div>
         </main>
       </div>
+
+      <ProfileScreen open={profileOpen} onClose={() => setProfileOpen(false)} />
     </div>
   )
 }

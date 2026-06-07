@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Bot, Loader2, Send, Sparkles } from 'lucide-react'
+import { Bot, Loader2, Mic, MicOff, Send, Sparkles } from 'lucide-react'
 import { useBot } from '../../context/BotContext'
 import { useGame } from '../../context/GameContext'
+import { useSpeechToText } from '../../hooks/useSpeechToText'
 import { BOT_SAMPLES } from '../../bots/samples'
 import { buildStrategyContext } from '../../lib/buildStrategyContext'
 import { generateStrategy } from '../../lib/strategy-api'
@@ -61,6 +62,31 @@ export function StrategyChat({ className }: { className?: string }) {
   const [includeContext, setIncludeContext] = useState(true)
   const [sampleId, setSampleId] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const inputBaseRef = useRef('')
+
+  const appendTranscript = useCallback((text: string, isFinal: boolean) => {
+    if (!text) return
+    if (isFinal) {
+      setInput((prev) => {
+        const base = inputBaseRef.current || prev
+        const merged = base ? `${base} ${text}`.trim() : text
+        inputBaseRef.current = merged
+        return merged
+      })
+    } else {
+      setInput(() => {
+        const base = inputBaseRef.current
+        return base ? `${base} ${text}`.trim() : text
+      })
+    }
+  }, [])
+
+  const { listening, supported, error: speechError, toggle: toggleSpeech, stop: stopSpeech } =
+    useSpeechToText(appendTranscript)
+
+  useEffect(() => {
+    if (!listening) inputBaseRef.current = input
+  }, [listening, input])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -87,6 +113,8 @@ export function StrategyChat({ className }: { className?: string }) {
         { id: pendingId, role: 'assistant', content: '', pending: true },
       ])
       setInput('')
+      inputBaseRef.current = ''
+      stopSpeech()
       setLoading(true)
 
       const chatHistory: StrategyChatTurn[] = [...messages, userMsg]
@@ -169,7 +197,7 @@ export function StrategyChat({ className }: { className?: string }) {
         setLoading(false)
       }
     },
-    [loading, messages, code, sampleId, includeContext, game],
+    [loading, messages, code, sampleId, includeContext, game, stopSpeech],
   )
 
   const applyStrategy = useCallback(
@@ -288,19 +316,49 @@ export function StrategyChat({ className }: { className?: string }) {
         >
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              inputBaseRef.current = e.target.value
+              setInput(e.target.value)
+            }}
             placeholder={
               game.playerCountry
-                ? 'Describe your strategy…'
+                ? listening
+                  ? 'Listening…'
+                  : 'Describe your strategy…'
                 : 'Connect to the game first'
             }
             disabled={loading || !game.connected}
             className="min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-[#f1f5f9] placeholder:text-[#64748b] focus:border-[#2dd4bf]/40 focus:outline-none disabled:opacity-50"
           />
+          <Button
+            type="button"
+            variant={listening ? 'primary' : 'secondary'}
+            disabled={!supported || loading || !game.connected}
+            onClick={toggleSpeech}
+            title={
+              supported
+                ? listening
+                  ? 'Stop dictation'
+                  : 'Speech to text'
+                : 'Speech recognition not supported in this browser'
+            }
+            aria-label={listening ? 'Stop dictation' : 'Start speech to text'}
+            aria-pressed={listening}
+          >
+            {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </Button>
           <Button type="submit" disabled={loading || !input.trim() || !game.connected}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
+        {speechError && (
+          <p className="mt-2 font-mono text-[9px] text-red-400">{speechError}</p>
+        )}
+        {!supported && (
+          <p className="mt-2 font-mono text-[9px] text-[#64748b]">
+            Speech-to-text works in Chrome and Edge. Use the mic button to dictate your strategy.
+          </p>
+        )}
         {!import.meta.env.DEV && (
           <p className="mt-2 flex items-center gap-1 font-mono text-[9px] text-[#64748b]">
             <Bot className="h-3 w-3" />

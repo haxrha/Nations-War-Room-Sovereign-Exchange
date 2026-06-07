@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "dev": "./run.sh",
+    "dev:backend": "./run.sh backend",
+    "dev:frontend": "./run.sh frontend"
+  },
   "dependencies": {
     "spacetime": "^7.12.1"
   }
