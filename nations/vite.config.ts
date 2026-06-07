@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { strategyApiPlugin } from './server/vite-plugin-strategy-api.ts'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), strategyApiPlugin()],
   server: {
     fs: {
       // Vite's strict allow-list treats any `:` in a path as invalid on macOS/Linux
