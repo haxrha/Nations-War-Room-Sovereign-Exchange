@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { handleNewsGenerate } from '../../server/news/generate.ts'
-import type { NewsGenerateRequest } from '../../src/lib/news-types.ts'
+import { handleNewsGenerate } from '../../server/news/generate'
+import type { NewsGenerateRequest } from '../../src/lib/news-types'
 
 export const config = { api: { bodyParser: true } }
 

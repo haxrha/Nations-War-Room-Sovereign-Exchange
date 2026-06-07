@@ -3,7 +3,7 @@ import type {
   ExplainTradeRequest,
   ExplainTradeResponse,
   TradeExplanation,
-} from '../../src/lib/trade-explain-types.ts'
+} from '../../src/lib/trade-explain-types'
 
 const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite'
 

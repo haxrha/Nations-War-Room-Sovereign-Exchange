@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { handleTradeExplain } from '../../server/trade/explain.ts'
-import type { ExplainTradeRequest } from '../../src/lib/trade-explain-types.ts'
+import { handleTradeExplain } from '../../server/trade/explain'
+import type { ExplainTradeRequest } from '../../src/lib/trade-explain-types'
 
 export const config = { api: { bodyParser: true } }
 

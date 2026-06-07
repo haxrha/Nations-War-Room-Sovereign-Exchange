@@ -3,7 +3,7 @@ import type {
   ProfileAnalytics,
   ProfileAnalyticsRequest,
   ProfileAnalyticsResponse,
-} from '../../src/lib/profile-analytics-types.ts'
+} from '../../src/lib/profile-analytics-types'
 
 const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite'
 

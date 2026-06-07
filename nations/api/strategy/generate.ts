@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { handleStrategyGenerate } from '../../server/strategy/generate.ts'
-import type { GenerateStrategyRequest } from '../../src/lib/strategy-api-types.ts'
+import { handleStrategyGenerate } from '../../server/strategy/generate'
+import type { GenerateStrategyRequest } from '../../src/lib/strategy-api-types'
 
 export const config = { api: { bodyParser: true } }
 

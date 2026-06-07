@@ -1,13 +1,13 @@
 import type { Plugin } from 'vite'
 import { loadEnv } from 'vite'
-import type { GenerateStrategyRequest } from '../src/lib/strategy-api-types.ts'
-import type { ExplainTradeRequest } from '../src/lib/trade-explain-types.ts'
-import type { ProfileAnalyticsRequest } from '../src/lib/profile-analytics-types.ts'
-import type { NewsGenerateRequest } from '../src/lib/news-types.ts'
-import { handleStrategyGenerate } from './strategy/generate.ts'
-import { handleTradeExplain } from './trade/explain.ts'
-import { handleProfileAnalytics } from './profile/analytics.ts'
-import { handleNewsGenerate } from './news/generate.ts'
+import type { GenerateStrategyRequest } from '../src/lib/strategy-api-types'
+import type { ExplainTradeRequest } from '../src/lib/trade-explain-types'
+import type { ProfileAnalyticsRequest } from '../src/lib/profile-analytics-types'
+import type { NewsGenerateRequest } from '../src/lib/news-types'
+import { handleStrategyGenerate } from './strategy/generate'
+import { handleTradeExplain } from './trade/explain'
+import { handleProfileAnalytics } from './profile/analytics'
+import { handleNewsGenerate } from './news/generate'
 
 function readJsonBody(req: import('http').IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {

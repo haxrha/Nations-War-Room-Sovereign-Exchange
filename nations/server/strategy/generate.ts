@@ -3,9 +3,9 @@ import type {
   GenerateStrategyRequest,
   GenerateStrategyResponse,
   GeneratedStrategy,
-} from '../../src/lib/strategy-api-types.ts'
-import { STRATEGY_SYSTEM_PROMPT, buildUserPrompt } from './prompt.ts'
-import { isStrategyCodeSafe, validateStrategyCode } from './validate.ts'
+} from '../../src/lib/strategy-api-types'
+import { STRATEGY_SYSTEM_PROMPT, buildUserPrompt } from './prompt'
+import { isStrategyCodeSafe, validateStrategyCode } from './validate'
 
 const DEFAULT_MODEL = 'gemini-3.1-flash-lite'
 const MAX_HISTORY = 10

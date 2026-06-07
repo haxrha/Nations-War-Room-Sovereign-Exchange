@@ -4,7 +4,7 @@ import type {
   NewsGenerateResponse,
   NewsItem,
   CommodityForecast,
-} from '../../src/lib/news-types.ts'
+} from '../../src/lib/news-types'
 
 const RATE_LIMIT = 5
 const RATE_WINDOW_MS = 60 * 1000

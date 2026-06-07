@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { handleProfileAnalytics } from '../../server/profile/analytics.ts'
-import type { ProfileAnalyticsRequest } from '../../src/lib/profile-analytics-types.ts'
+import { handleProfileAnalytics } from '../../server/profile/analytics'
+import type { ProfileAnalyticsRequest } from '../../src/lib/profile-analytics-types'
 
 export const config = { api: { bodyParser: true } }
 
