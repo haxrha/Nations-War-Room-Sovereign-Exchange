@@ -12,7 +12,7 @@ const MAX_HISTORY = 10
 
 type RateBucket = { count: number; resetAt: number }
 const rateLimits = new Map<string, RateBucket>()
-const RATE_LIMIT = 2
+const RATE_LIMIT = 1
 const RATE_WINDOW_MS = 60 * 60 * 1000
 
 function checkRateLimit(clientKey: string): string | null {
@@ -54,11 +54,47 @@ function parseModelJson(text: string): GeneratedStrategy {
   }
 }
 
+function formatGeminiError(err: unknown): { code: string; message: string; retryable: boolean } {
+  const msg = err instanceof Error ? err.message : String(err)
+
+  if (/429|Too Many Requests/i.test(msg)) {
+    if (/prepayment credits are depleted|billing|quota/i.test(msg)) {
+      return {
+        code: 'GEMINI_BILLING',
+        message:
+          'Gemini API credits are depleted for this Google Cloud project. Add billing or credits at https://aistudio.google.com/apikey — until then, use the sample strategies in the editor.',
+        retryable: false,
+      }
+    }
+    return {
+      code: 'GEMINI_RATE_LIMIT',
+      message:
+        'Gemini API rate limit hit. Wait a minute and try again, or switch to a project with available quota.',
+      retryable: true,
+    }
+  }
+
+  if (/401|403|API key not valid|PERMISSION_DENIED/i.test(msg)) {
+    return {
+      code: 'GEMINI_AUTH',
+      message:
+        'Invalid or unauthorized Gemini API key. Check GEMINI_API_KEY in nations/.env.local and restart npm run dev.',
+      retryable: false,
+    }
+  }
+
+  return {
+    code: 'UPSTREAM_ERROR',
+    message: msg,
+    retryable: true,
+  }
+}
+
 export async function handleStrategyGenerate(
   body: GenerateStrategyRequest,
-  options: { apiKey: string; clientKey?: string },
+  options: { apiKey: string; clientKey?: string; model?: string },
 ): Promise<GenerateStrategyResponse> {
-  const { apiKey, clientKey = 'default' } = options
+  const { apiKey, clientKey = 'default', model = DEFAULT_MODEL } = options
 
   if (!apiKey) {
     return {
@@ -98,9 +134,10 @@ export async function handleStrategyGenerate(
   const chatHistory = (body.chatHistory ?? []).slice(-MAX_HISTORY)
 
   try {
+    const modelId = model
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: DEFAULT_MODEL,
+    const geminiModel = genAI.getGenerativeModel({
+      model: modelId,
       systemInstruction: STRATEGY_SYSTEM_PROMPT,
       generationConfig: {
         temperature: 0.3,
@@ -120,7 +157,7 @@ export async function handleStrategyGenerate(
       preferences: body.preferences,
     })
 
-    const result = await model.generateContent(userPrompt)
+    const result = await geminiModel.generateContent(userPrompt)
     const text = result.response.text()
     if (!text) {
       return {
@@ -177,20 +214,16 @@ export async function handleStrategyGenerate(
       strategy,
       validation,
       usage: {
-        model: DEFAULT_MODEL,
+        model: modelId,
         inputTokens: usage?.promptTokenCount,
         outputTokens: usage?.candidatesTokenCount,
       },
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
+    const formatted = formatGeminiError(err)
     return {
       ok: false,
-      error: {
-        code: 'UPSTREAM_ERROR',
-        message: msg,
-        retryable: true,
-      },
+      error: formatted,
     }
   }
 }

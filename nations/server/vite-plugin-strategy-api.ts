@@ -37,6 +37,7 @@ export function strategyApiPlugin(): Plugin {
     configureServer(server) {
       const env = loadEnv(server.config.mode, server.config.root, '')
       const apiKey = env.GEMINI_API_KEY ?? process.env.GEMINI_API_KEY ?? ''
+      const model = env.GEMINI_MODEL ?? process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split('?')[0] ?? ''
@@ -48,6 +49,7 @@ export function strategyApiPlugin(): Plugin {
             const result = await handleStrategyGenerate(body, {
               apiKey,
               clientKey: clientKeyFromReq(req),
+              model,
             })
             res.statusCode = result.ok ? 200 : 400
             res.end(JSON.stringify(result))
