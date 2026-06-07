@@ -111,7 +111,7 @@ export async function handleNewsGenerate(
     return {
       ok: true,
       items: parsed.items ?? [],
-      marketMood: parsed.marketMood ?? 'NEUTRAL',
+      marketMood: (parsed.marketMood ?? 'NEUTRAL') as import('../../src/lib/news-types.ts').MarketMood,
       moodReason: parsed.moodReason ?? '',
       forecasts: parsed.forecasts ?? {},
     }

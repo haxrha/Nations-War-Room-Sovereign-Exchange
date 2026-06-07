@@ -23,7 +23,7 @@ export function NewsTab() {
   const [lastUpdated, setLastUpdated] = useState<number | null>(null)
   const [secondsAgo, setSecondsAgo] = useState(0)
 
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const fetchNews = useCallback(async () => {
     if (!game.tablesReady || loading) return

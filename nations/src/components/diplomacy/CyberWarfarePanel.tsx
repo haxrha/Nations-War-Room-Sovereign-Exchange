@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Zap, ShieldAlert, Eye, TrendingDown, Factory } from 'lucide-react'
 import { useGame } from '../../context/GameContext'
-import { formatMoney, getCountry, getCommodity, idStr } from '../../lib/utils'
+import { formatMoney, getCountry, idStr } from '../../lib/utils'
 import { Panel } from '../ui/Panel'
 import { Button, Select } from '../ui/Button'
 import { cn } from '../../lib/cn'
