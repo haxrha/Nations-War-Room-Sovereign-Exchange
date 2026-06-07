@@ -190,6 +190,15 @@ export function seedWorld(ctx: ModuleCtx): void {
       scheduledAt: ScheduleAt.interval(10_000_000n),
     });
   }
+
+  let hasEventTick = false;
+  for (const _ of ctx.db.eventTickSchedule.iter()) hasEventTick = true;
+  if (!hasEventTick) {
+    ctx.db.eventTickSchedule.insert({
+      scheduledId: 0n,
+      scheduledAt: ScheduleAt.interval(60_000_000n), // every 60 seconds
+    });
+  }
 }
 
 export function clearWorld(ctx: ModuleCtx): void {
@@ -201,6 +210,15 @@ export function clearWorld(ctx: ModuleCtx): void {
   }
   for (const row of [...ctx.db.sanction.iter()]) {
     ctx.db.sanction.id.delete(row.id);
+  }
+  for (const row of [...ctx.db.alliance.iter()]) {
+    ctx.db.alliance.id.delete(row.id);
+  }
+  for (const row of [...ctx.db.cyberAttack.iter()]) {
+    ctx.db.cyberAttack.id.delete(row.id);
+  }
+  for (const row of [...ctx.db.worldEvent.iter()]) {
+    ctx.db.worldEvent.id.delete(row.id);
   }
   for (const row of [...ctx.db.player.iter()]) {
     ctx.db.player.identity.delete(row.identity);

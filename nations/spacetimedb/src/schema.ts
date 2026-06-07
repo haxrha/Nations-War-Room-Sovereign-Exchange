@@ -150,10 +150,80 @@ export const sanction = table(
   },
 );
 
+/** status: 'pending' | 'active' | 'dissolved' */
+export const alliance = table(
+  {
+    name: 'alliance',
+    public: true,
+    indexes: [
+      { accessor: 'byProposer', algorithm: 'btree', columns: ['proposerId'] },
+      { accessor: 'byPartner', algorithm: 'btree', columns: ['partnerId'] },
+      {
+        accessor: 'byProposerAndPartner',
+        algorithm: 'btree',
+        columns: ['proposerId', 'partnerId'],
+      },
+    ],
+  },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    proposerId: t.u64(),
+    partnerId: t.u64(),
+    /** 'pending' | 'active' | 'dissolved' */
+    status: t.string().index('btree'),
+    createdAt: t.timestamp(),
+  },
+);
+
+/** status: 'success' | 'detected' */
+export const cyberAttack = table(
+  {
+    name: 'cyber_attack',
+    public: true,
+    indexes: [
+      { accessor: 'byAttacker', algorithm: 'btree', columns: ['attackerId'] },
+      { accessor: 'byTarget', algorithm: 'btree', columns: ['targetId'] },
+    ],
+  },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    attackerId: t.u64(),
+    targetId: t.u64(),
+    /** 'infrastructure' | 'disrupt_trade' | 'leak_info' | 'market_manipulation' */
+    attackType: t.string(),
+    /** 'success' | 'detected' */
+    status: t.string(),
+    effectDescription: t.string(),
+    executedAt: t.timestamp(),
+  },
+);
+
+export const worldEvent = table(
+  {
+    name: 'world_event',
+    public: true,
+    indexes: [
+      { accessor: 'byActive', algorithm: 'btree', columns: ['active'] },
+    ],
+  },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    eventType: t.string(),
+    headline: t.string(),
+    description: t.string(),
+    /** 0n = all commodities affected */
+    affectedCommodityId: t.u64(),
+    priceMultiplier: t.f64(),
+    active: t.bool(),
+    triggeredAt: t.timestamp(),
+  },
+);
+
 /** Forward refs resolved after reducer exports are created. */
-const scheduleReducers: Record<'price_tick' | 'bot_tick', object | null> = {
+const scheduleReducers: Record<'price_tick' | 'bot_tick' | 'event_tick', object | null> = {
   price_tick: null,
   bot_tick: null,
+  event_tick: null,
 };
 
 export const priceTickSchedule = table(
@@ -178,6 +248,17 @@ export const botTickSchedule = table(
   },
 );
 
+export const eventTickSchedule = table(
+  {
+    name: 'event_tick_schedule',
+    scheduled: () => scheduleReducers.event_tick! as NonNullable<ReturnType<NonNullable<Parameters<typeof table>[0]['scheduled']>>>,
+  },
+  {
+    scheduledId: t.u64().primaryKey().autoInc(),
+    scheduledAt: t.scheduleAt(),
+  },
+);
+
 export const spacetimedb = schema({
   meta,
   player,
@@ -188,14 +269,18 @@ export const spacetimedb = schema({
   tradeOffer,
   tradeHistory,
   sanction,
+  alliance,
+  cyberAttack,
+  worldEvent,
   priceTickSchedule,
   botTickSchedule,
+  eventTickSchedule,
 });
 
 export type ModuleCtx = ReducerCtx<typeof spacetimedb.schemaType>;
 export type CountryRow = Infer<typeof country.rowType>;
 
-import { runPriceTick, runBotTick } from './lib/tick-handlers';
+import { runPriceTick, runBotTick, runEventTick } from './lib/tick-handlers';
 
 export const price_tick = spacetimedb.reducer(
   { arg: priceTickSchedule.rowType },
@@ -212,5 +297,13 @@ export const bot_tick = spacetimedb.reducer(
   },
 );
 scheduleReducers.bot_tick = bot_tick;
+
+export const event_tick = spacetimedb.reducer(
+  { arg: eventTickSchedule.rowType },
+  (ctx, { arg: _arg }) => {
+    runEventTick(ctx);
+  },
+);
+scheduleReducers.event_tick = event_tick;
 
 export default spacetimedb;

@@ -1,11 +1,11 @@
 import type { IncomingMessage, ServerResponse } from 'http'
-import { handleStrategyGenerate } from '../../server/strategy/generate.ts'
-import type { GenerateStrategyRequest } from '../../src/lib/strategy-api-types.ts'
+import { handleNewsGenerate } from '../../server/news/generate.ts'
+import type { NewsGenerateRequest } from '../../src/lib/news-types.ts'
 
 export const config = { api: { bodyParser: true } }
 
 export default async function handler(
-  req: IncomingMessage & { body?: GenerateStrategyRequest },
+  req: IncomingMessage & { body?: NewsGenerateRequest },
   res: ServerResponse,
 ) {
   if (req.method !== 'POST') {
@@ -14,10 +14,9 @@ export default async function handler(
     return
   }
 
-  const ip =
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? 'vercel'
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? 'vercel'
 
-  const result = await handleStrategyGenerate(req.body ?? ({} as GenerateStrategyRequest), {
+  const result = await handleNewsGenerate(req.body ?? ({} as NewsGenerateRequest), {
     apiKey: process.env.GEMINI_API_KEY ?? '',
     clientKey: ip,
     model: process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite',

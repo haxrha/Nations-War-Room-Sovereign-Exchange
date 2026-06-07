@@ -3,9 +3,11 @@ import { loadEnv } from 'vite'
 import type { GenerateStrategyRequest } from '../src/lib/strategy-api-types.ts'
 import type { ExplainTradeRequest } from '../src/lib/trade-explain-types.ts'
 import type { ProfileAnalyticsRequest } from '../src/lib/profile-analytics-types.ts'
+import type { NewsGenerateRequest } from '../src/lib/news-types.ts'
 import { handleStrategyGenerate } from './strategy/generate.ts'
 import { handleTradeExplain } from './trade/explain.ts'
 import { handleProfileAnalytics } from './profile/analytics.ts'
+import { handleNewsGenerate } from './news/generate.ts'
 
 function readJsonBody(req: import('http').IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -37,7 +39,7 @@ export function strategyApiPlugin(): Plugin {
     configureServer(server) {
       const env = loadEnv(server.config.mode, server.config.root, '')
       const apiKey = env.GEMINI_API_KEY ?? process.env.GEMINI_API_KEY ?? ''
-      const model = env.GEMINI_MODEL ?? process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
+      const model = env.GEMINI_MODEL ?? process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite'
 
       server.middlewares.use(async (req, res, next) => {
         const url = req.url?.split('?')[0] ?? ''
@@ -117,6 +119,24 @@ export function strategyApiPlugin(): Plugin {
                 },
               }),
             )
+          }
+          return
+        }
+
+        if (url === '/api/news/generate' && req.method === 'POST') {
+          res.setHeader('Content-Type', 'application/json')
+          try {
+            const body = (await readJsonBody(req)) as NewsGenerateRequest
+            const result = await handleNewsGenerate(body, {
+              apiKey,
+              clientKey: clientKeyFromReq(req),
+              model,
+            })
+            res.statusCode = result.ok ? 200 : 400
+            res.end(JSON.stringify(result))
+          } catch {
+            res.statusCode = 500
+            res.end(JSON.stringify({ ok: false, error: { code: 'SERVER_ERROR', message: 'News generation failed', retryable: true } }))
           }
           return
         }

@@ -34,12 +34,16 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import AcceptAllianceReducer from "./accept_alliance_reducer";
 import AcceptTradeReducer from "./accept_trade_reducer";
 import CancelOfferReducer from "./cancel_offer_reducer";
 import ImposeSanctionReducer from "./impose_sanction_reducer";
 import InitReducer from "./init_reducer";
+import LaunchCyberAttackReducer from "./launch_cyber_attack_reducer";
+import LeaveAllianceReducer from "./leave_alliance_reducer";
 import LiftSanctionReducer from "./lift_sanction_reducer";
 import PlaceOfferReducer from "./place_offer_reducer";
+import ProposeAllianceReducer from "./propose_alliance_reducer";
 import ResetMetaReducer from "./reset_meta_reducer";
 import ResetWorldReducer from "./reset_world_reducer";
 import SetCountryProfileReducer from "./set_country_profile_reducer";
@@ -47,19 +51,46 @@ import SetCountryProfileReducer from "./set_country_profile_reducer";
 // Import all procedure arg schemas
 
 // Import all table schema definitions
+import AllianceRow from "./alliance_table";
 import CommodityRow from "./commodity_table";
 import CountryRow from "./country_table";
 import CountryResourceRow from "./country_resource_table";
+import CyberAttackRow from "./cyber_attack_table";
 import PlayerRow from "./player_table";
 import SanctionRow from "./sanction_table";
 import SpotPriceRow from "./spot_price_table";
 import TradeHistoryRow from "./trade_history_table";
 import TradeOfferRow from "./trade_offer_table";
+import WorldEventRow from "./world_event_table";
 
 /** Type-only namespace exports for generated type groups. */
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
+  alliance: __table({
+    name: 'alliance',
+    indexes: [
+      { accessor: 'id', name: 'alliance_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'byPartner', name: 'alliance_partner_id_idx_btree', algorithm: 'btree', columns: [
+        'partnerId',
+      ] },
+      { accessor: 'byProposer', name: 'alliance_proposer_id_idx_btree', algorithm: 'btree', columns: [
+        'proposerId',
+      ] },
+      { accessor: 'byProposerAndPartner', name: 'alliance_proposer_id_partner_id_idx_btree', algorithm: 'btree', columns: [
+        'proposerId',
+        'partnerId',
+      ] },
+      { accessor: 'status', name: 'alliance_status_idx_btree', algorithm: 'btree', columns: [
+        'status',
+      ] },
+    ],
+    constraints: [
+      { name: 'alliance_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, AllianceRow),
   commodity: __table({
     name: 'commodity',
     indexes: [
@@ -106,6 +137,23 @@ const tablesSchema = __schema({
       { name: 'country_resource_id_key', constraint: 'unique', columns: ['id'] },
     ],
   }, CountryResourceRow),
+  cyberAttack: __table({
+    name: 'cyber_attack',
+    indexes: [
+      { accessor: 'byAttacker', name: 'cyber_attack_attacker_id_idx_btree', algorithm: 'btree', columns: [
+        'attackerId',
+      ] },
+      { accessor: 'id', name: 'cyber_attack_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+      { accessor: 'byTarget', name: 'cyber_attack_target_id_idx_btree', algorithm: 'btree', columns: [
+        'targetId',
+      ] },
+    ],
+    constraints: [
+      { name: 'cyber_attack_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, CyberAttackRow),
   player: __table({
     name: 'player',
     indexes: [
@@ -195,16 +243,34 @@ const tablesSchema = __schema({
       { name: 'trade_offer_id_key', constraint: 'unique', columns: ['id'] },
     ],
   }, TradeOfferRow),
+  worldEvent: __table({
+    name: 'world_event',
+    indexes: [
+      { accessor: 'byActive', name: 'world_event_active_idx_btree', algorithm: 'btree', columns: [
+        'active',
+      ] },
+      { accessor: 'id', name: 'world_event_id_idx_btree', algorithm: 'btree', columns: [
+        'id',
+      ] },
+    ],
+    constraints: [
+      { name: 'world_event_id_key', constraint: 'unique', columns: ['id'] },
+    ],
+  }, WorldEventRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("accept_alliance", AcceptAllianceReducer),
   __reducerSchema("accept_trade", AcceptTradeReducer),
   __reducerSchema("cancel_offer", CancelOfferReducer),
   __reducerSchema("impose_sanction", ImposeSanctionReducer),
   __reducerSchema("init", InitReducer),
+  __reducerSchema("launch_cyber_attack", LaunchCyberAttackReducer),
+  __reducerSchema("leave_alliance", LeaveAllianceReducer),
   __reducerSchema("lift_sanction", LiftSanctionReducer),
   __reducerSchema("place_offer", PlaceOfferReducer),
+  __reducerSchema("propose_alliance", ProposeAllianceReducer),
   __reducerSchema("reset_meta", ResetMetaReducer),
   __reducerSchema("reset_world", ResetWorldReducer),
   __reducerSchema("set_country_profile", SetCountryProfileReducer),

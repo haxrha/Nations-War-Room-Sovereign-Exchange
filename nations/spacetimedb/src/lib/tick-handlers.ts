@@ -5,6 +5,7 @@ import {
   recalculateAllGdp,
 } from './helpers';
 import { cancelOversizedBotOffers, runBotStrategy } from '../bots';
+export { runEventTick } from './events';
 
 export function runPriceTick(ctx: ModuleCtx): void {
   const thirtySecondsAgo = ctx.timestamp.microsSinceUnixEpoch - 30_000_000n;

@@ -10,6 +10,15 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
+export const Alliance = __t.object("Alliance", {
+  id: __t.u64(),
+  proposerId: __t.u64(),
+  partnerId: __t.u64(),
+  status: __t.string(),
+  createdAt: __t.timestamp(),
+});
+export type Alliance = __Infer<typeof Alliance>;
+
 export const BotTickSchedule = __t.object("BotTickSchedule", {
   scheduledId: __t.u64(),
   scheduledAt: __t.scheduleAt(),
@@ -49,6 +58,23 @@ export const CountryResource = __t.object("CountryResource", {
   productionRate: __t.f64(),
 });
 export type CountryResource = __Infer<typeof CountryResource>;
+
+export const CyberAttack = __t.object("CyberAttack", {
+  id: __t.u64(),
+  attackerId: __t.u64(),
+  targetId: __t.u64(),
+  attackType: __t.string(),
+  status: __t.string(),
+  effectDescription: __t.string(),
+  executedAt: __t.timestamp(),
+});
+export type CyberAttack = __Infer<typeof CyberAttack>;
+
+export const EventTickSchedule = __t.object("EventTickSchedule", {
+  scheduledId: __t.u64(),
+  scheduledAt: __t.scheduleAt(),
+});
+export type EventTickSchedule = __Infer<typeof EventTickSchedule>;
 
 export const Meta = __t.object("Meta", {
   id: __t.u8(),
@@ -108,4 +134,16 @@ export const TradeOffer = __t.object("TradeOffer", {
   createdAt: __t.timestamp(),
 });
 export type TradeOffer = __Infer<typeof TradeOffer>;
+
+export const WorldEvent = __t.object("WorldEvent", {
+  id: __t.u64(),
+  eventType: __t.string(),
+  headline: __t.string(),
+  description: __t.string(),
+  affectedCommodityId: __t.u64(),
+  priceMultiplier: __t.f64(),
+  active: __t.bool(),
+  triggeredAt: __t.timestamp(),
+});
+export type WorldEvent = __Infer<typeof WorldEvent>;
 

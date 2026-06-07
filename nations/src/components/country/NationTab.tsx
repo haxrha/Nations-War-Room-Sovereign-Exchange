@@ -1,9 +1,18 @@
 import { useState } from 'react'
 import { CountryDashboard } from '../country/CountryDashboard'
 import { SanctionsPanel } from '../diplomacy/SanctionsPanel'
+import { AlliancesPanel } from '../diplomacy/AlliancesPanel'
+import { CyberWarfarePanel } from '../diplomacy/CyberWarfarePanel'
 import { cn } from '../../lib/cn'
 
-type NationView = 'portfolio' | 'diplomacy'
+type NationView = 'portfolio' | 'diplomacy' | 'alliances' | 'cyber'
+
+const VIEWS: { id: NationView; label: string }[] = [
+  { id: 'portfolio', label: 'Portfolio' },
+  { id: 'diplomacy', label: 'Sanctions' },
+  { id: 'alliances', label: 'Alliances' },
+  { id: 'cyber', label: 'Cyber Ops' },
+]
 
 export function NationTab() {
   const [view, setView] = useState<NationView>('portfolio')
@@ -15,12 +24,7 @@ export function NationTab() {
         role="tablist"
         aria-label="Nation views"
       >
-        {(
-          [
-            { id: 'portfolio' as const, label: 'Portfolio & trade' },
-            { id: 'diplomacy' as const, label: 'Diplomacy' },
-          ] as const
-        ).map(({ id, label }) => (
+        {VIEWS.map(({ id, label }) => (
           <button
             key={id}
             type="button"
@@ -40,11 +44,10 @@ export function NationTab() {
         ))}
       </div>
       <div className="min-h-0 flex-1">
-        {view === 'portfolio' ? (
-          <CountryDashboard className="h-full" />
-        ) : (
-          <SanctionsPanel className="h-full" />
-        )}
+        {view === 'portfolio' && <CountryDashboard className="h-full" />}
+        {view === 'diplomacy' && <SanctionsPanel className="h-full" />}
+        {view === 'alliances' && <AlliancesPanel className="h-full" />}
+        {view === 'cyber' && <CyberWarfarePanel className="h-full" />}
       </div>
     </div>
   )

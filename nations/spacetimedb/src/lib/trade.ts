@@ -3,6 +3,10 @@ import type { ModuleCtx } from '../schema';
 import { findResource, recalculateGdp } from './helpers';
 import { applyTradePriceImpact } from './pricing';
 import { isSanctioned } from './sanctions';
+import { isAllied } from './alliances';
+
+/** 5% rebate credited to both buyer and seller on allied trades */
+const ALLY_BONUS_PCT = 0.05;
 
 export function executeTrade(
   ctx: ModuleCtx,
@@ -29,8 +33,12 @@ export function executeTrade(
   const totalCost = offer.qty * offer.pricePerUnit;
   if (buyer.balance < totalCost) throw new SenderError('Insufficient funds');
 
-  ctx.db.country.id.update({ ...buyer, balance: buyer.balance - totalCost });
-  ctx.db.country.id.update({ ...seller, balance: seller.balance + totalCost });
+  const allied = isAllied(ctx, buyer.id, seller.id);
+  const allyBonus = allied ? totalCost * ALLY_BONUS_PCT : 0;
+
+  // Buyer pays full cost; both get a bonus rebate if allied
+  ctx.db.country.id.update({ ...buyer, balance: buyer.balance - totalCost + allyBonus });
+  ctx.db.country.id.update({ ...seller, balance: seller.balance + totalCost + allyBonus });
 
   const buyerResource = findResource(ctx, buyer.id, offer.commodityId);
   if (buyerResource) {

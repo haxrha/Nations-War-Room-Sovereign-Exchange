@@ -18,6 +18,9 @@ import type SpotPriceRow from '../module_bindings/spot_price_table'
 import type CommodityRow from '../module_bindings/commodity_table'
 import type CountryResourceRow from '../module_bindings/country_resource_table'
 import type SanctionRow from '../module_bindings/sanction_table'
+import type AllianceRow from '../module_bindings/alliance_table'
+import type CyberAttackRow from '../module_bindings/cyber_attack_table'
+import type WorldEventRow from '../module_bindings/world_event_table'
 import type { PricePoint } from '../lib/utils'
 
 export type Country = Infer<typeof CountryRow>
@@ -27,6 +30,9 @@ export type SpotPrice = Infer<typeof SpotPriceRow>
 export type Commodity = Infer<typeof CommodityRow>
 export type CountryResource = Infer<typeof CountryResourceRow>
 export type Sanction = Infer<typeof SanctionRow>
+export type Alliance = Infer<typeof AllianceRow>
+export type CyberAttack = Infer<typeof CyberAttackRow>
+export type WorldEvent = Infer<typeof WorldEventRow>
 
 export interface GameContextValue {
   connected: boolean
@@ -43,6 +49,10 @@ export interface GameContextValue {
   tradeHistory: readonly TradeHistory[]
   sanctions: readonly Sanction[]
   activeSanctions: readonly Sanction[]
+  alliances: readonly Alliance[]
+  activeAlliances: readonly Alliance[]
+  cyberAttacks: readonly CyberAttack[]
+  worldEvents: readonly WorldEvent[]
   selectedCommodityId: bigint | null
   priceHistory: Record<string, PricePoint[]>
   now: number
@@ -53,6 +63,10 @@ export interface GameContextValue {
   setCountryProfile: (name: string, isoCode: string) => Promise<void>
   imposeSanction: (targetCountryId: bigint, commodityId: bigint, reason: string) => Promise<void>
   liftSanction: (sanctionId: bigint) => Promise<void>
+  proposeAlliance: (partnerId: bigint) => Promise<void>
+  acceptAlliance: (allianceId: bigint) => Promise<void>
+  leaveAlliance: (allianceId: bigint) => Promise<void>
+  launchCyberAttack: (targetId: bigint, attackType: string, targetCommodityId: bigint) => Promise<void>
   setSelectedCommodity: (id: bigint) => void
   resetWorld: () => Promise<void>
 }
@@ -76,6 +90,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [tradeHistory, historyReady] = useTable(tables.tradeHistory)
   const [players, playersReady] = useTable(tables.player)
   const [sanctions, sanctionsReady] = useTable(tables.sanction)
+  const [alliances, alliancesReady] = useTable(tables.alliance)
+  const [cyberAttacks, cyberAttacksReady] = useTable(tables.cyberAttack)
+  const [worldEvents, worldEventsReady] = useTable(tables.worldEvent)
 
   const [selectedCommodityId, setSelectedCommodityId] = useState<bigint | null>(null)
   const [priceHistory, setPriceHistory] = useState<Record<string, PricePoint[]>>({})
@@ -90,6 +107,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const setProfileReducer = useReducer(reducers.setCountryProfile)
   const imposeSanctionReducer = useReducer(reducers.imposeSanction)
   const liftSanctionReducer = useReducer(reducers.liftSanction)
+  const proposeAllianceReducer = useReducer(reducers.proposeAlliance)
+  const acceptAllianceReducer = useReducer(reducers.acceptAlliance)
+  const leaveAllianceReducer = useReducer(reducers.leaveAlliance)
+  const launchCyberAttackReducer = useReducer(reducers.launchCyberAttack)
   const resetWorldReducer = useReducer(reducers.resetWorld)
 
   const tablesReady =
@@ -100,7 +121,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     spotReady &&
     historyReady &&
     playersReady &&
-    sanctionsReady
+    sanctionsReady &&
+    alliancesReady &&
+    cyberAttacksReady &&
+    worldEventsReady
 
   const playerCountryId = useMemo(() => {
     if (!identity) return null
@@ -121,6 +145,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const activeSanctions = useMemo(
     () => sanctions.filter((s) => s.active),
     [sanctions],
+  )
+
+  const activeAlliances = useMemo(
+    () => alliances.filter((a) => a.status === 'active'),
+    [alliances],
   )
 
   useEffect(() => {
@@ -246,6 +275,55 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [liftSanctionReducer],
   )
 
+  const proposeAlliance = useCallback(
+    async (partnerId: bigint) => {
+      setError(null)
+      try {
+        await proposeAllianceReducer({ partnerId })
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to propose alliance')
+      }
+    },
+    [proposeAllianceReducer],
+  )
+
+  const acceptAlliance = useCallback(
+    async (allianceId: bigint) => {
+      setError(null)
+      try {
+        await acceptAllianceReducer({ allianceId })
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to accept alliance')
+      }
+    },
+    [acceptAllianceReducer],
+  )
+
+  const leaveAlliance = useCallback(
+    async (allianceId: bigint) => {
+      setError(null)
+      try {
+        await leaveAllianceReducer({ allianceId })
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to leave alliance')
+      }
+    },
+    [leaveAllianceReducer],
+  )
+
+  const launchCyberAttack = useCallback(
+    async (targetId: bigint, attackType: string, targetCommodityId: bigint) => {
+      setError(null)
+      try {
+        await launchCyberAttackReducer({ targetId, attackType, targetCommodityId })
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Cyber attack failed')
+        throw e
+      }
+    },
+    [launchCyberAttackReducer],
+  )
+
   const resetWorld = useCallback(async () => {
     setError(null)
     try {
@@ -273,6 +351,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tradeHistory: sortedHistory,
       sanctions,
       activeSanctions,
+      alliances,
+      activeAlliances,
+      cyberAttacks,
+      worldEvents,
       selectedCommodityId,
       priceHistory,
       now,
@@ -283,6 +365,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setCountryProfile,
       imposeSanction,
       liftSanction,
+      proposeAlliance,
+      acceptAlliance,
+      leaveAlliance,
+      launchCyberAttack,
       setSelectedCommodity: setSelectedCommodityId,
       resetWorld,
     }),
@@ -301,6 +387,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       sortedHistory,
       sanctions,
       activeSanctions,
+      alliances,
+      activeAlliances,
+      cyberAttacks,
+      worldEvents,
       selectedCommodityId,
       priceHistory,
       now,
@@ -311,6 +401,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setCountryProfile,
       imposeSanction,
       liftSanction,
+      proposeAlliance,
+      acceptAlliance,
+      leaveAlliance,
+      launchCyberAttack,
       resetWorld,
     ],
   )

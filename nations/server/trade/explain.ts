@@ -5,12 +5,12 @@ import type {
   TradeExplanation,
 } from '../../src/lib/trade-explain-types.ts'
 
-const DEFAULT_MODEL = 'gemini-2.0-flash'
+const DEFAULT_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite'
 
 type RateBucket = { count: number; resetAt: number }
 const rateLimits = new Map<string, RateBucket>()
-const RATE_LIMIT = 20
-const RATE_WINDOW_MS = 60 * 60 * 1000
+const RATE_LIMIT = 5
+const RATE_WINDOW_MS = 60 * 1000
 
 function checkRateLimit(clientKey: string): string | null {
   const now = Date.now()

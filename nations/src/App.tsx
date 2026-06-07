@@ -9,8 +9,10 @@ import { NationTab } from './components/country/NationTab'
 import { ExchangeTab } from './components/trading/ExchangeTab'
 import { Leaderboard } from './components/leaderboard/Leaderboard'
 import { BotTab } from './components/bots/BotTab'
+import { NewsTab } from './components/news/NewsTab'
 import { ProfileScreen } from './components/profile/ProfileScreen'
 import { AmbientBackground, ConnectionBanner } from './components/ui/Decorations'
+import { EventPopup } from './components/ui/EventPopup'
 import { useGame } from './context/GameContext'
 import { cn } from './lib/cn'
 
@@ -51,10 +53,14 @@ function App() {
           <div className={cn('mx-auto h-full max-w-3xl', tab === 'ranks' ? 'block' : 'hidden')}>
             <Leaderboard className="h-full" />
           </div>
+          <div className={cn('mx-auto h-full max-w-6xl', tab === 'news' ? 'block' : 'hidden')}>
+            {tab === 'news' && <NewsTab />}
+          </div>
         </main>
       </div>
 
       <ProfileScreen open={profileOpen} onClose={() => setProfileOpen(false)} />
+      <EventPopup />
     </div>
   )
 }

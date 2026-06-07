@@ -6,22 +6,30 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
+import AcceptAllianceReducer from "../accept_alliance_reducer";
 import AcceptTradeReducer from "../accept_trade_reducer";
 import CancelOfferReducer from "../cancel_offer_reducer";
 import ImposeSanctionReducer from "../impose_sanction_reducer";
 import InitReducer from "../init_reducer";
+import LaunchCyberAttackReducer from "../launch_cyber_attack_reducer";
+import LeaveAllianceReducer from "../leave_alliance_reducer";
 import LiftSanctionReducer from "../lift_sanction_reducer";
 import PlaceOfferReducer from "../place_offer_reducer";
+import ProposeAllianceReducer from "../propose_alliance_reducer";
 import ResetMetaReducer from "../reset_meta_reducer";
 import ResetWorldReducer from "../reset_world_reducer";
 import SetCountryProfileReducer from "../set_country_profile_reducer";
 
+export type AcceptAllianceParams = __Infer<typeof AcceptAllianceReducer>;
 export type AcceptTradeParams = __Infer<typeof AcceptTradeReducer>;
 export type CancelOfferParams = __Infer<typeof CancelOfferReducer>;
 export type ImposeSanctionParams = __Infer<typeof ImposeSanctionReducer>;
 export type InitParams = __Infer<typeof InitReducer>;
+export type LaunchCyberAttackParams = __Infer<typeof LaunchCyberAttackReducer>;
+export type LeaveAllianceParams = __Infer<typeof LeaveAllianceReducer>;
 export type LiftSanctionParams = __Infer<typeof LiftSanctionReducer>;
 export type PlaceOfferParams = __Infer<typeof PlaceOfferReducer>;
+export type ProposeAllianceParams = __Infer<typeof ProposeAllianceReducer>;
 export type ResetMetaParams = __Infer<typeof ResetMetaReducer>;
 export type ResetWorldParams = __Infer<typeof ResetWorldReducer>;
 export type SetCountryProfileParams = __Infer<typeof SetCountryProfileReducer>;
