@@ -62,13 +62,19 @@ export function CountryDashboard({ className }: { className?: string }) {
     ? getResource(playerCountryId, activeCommodityId, resources)
     : 0
 
-  const holdings = commodities
-    .map((c) => ({
+  const inventory = commodities.map((c) => {
+    const row = resources.find(
+      (r) => r.countryId === playerCountryId && r.commodityId === c.id,
+    )
+    return {
       commodity: c,
-      qty: getResource(playerCountryId, c.id, resources),
+      qty: row?.qty ?? 0,
+      productionRate: row?.productionRate ?? 0,
       spot: spotPrices.find((s) => s.commodityId === c.id),
-    }))
-    .filter((h) => h.qty > 0)
+    }
+  })
+
+  const holdings = inventory.filter((h) => h.qty > 0)
 
   const needsProfile =
     playerCountry.name === 'New Player' || playerCountry.isoCode === '???'
@@ -153,39 +159,52 @@ export function CountryDashboard({ className }: { className?: string }) {
           <div className="font-mono-label mb-3 text-[10px] uppercase tracking-widest text-[#8A8F98]">
             Resource stockpile
           </div>
-          {holdings.length === 0 ? (
-            <p className="text-xs text-[#8A8F98]">No resources yet — buy from the market</p>
-          ) : (
-            <div className="space-y-2">
-              {holdings.map(({ commodity: c, qty: q, spot: s }) => (
-                <div
-                  key={idStr(c.id)}
-                  className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 transition-transform duration-300 hover:-translate-y-0.5"
-                  style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border text-[10px] font-semibold"
-                      style={{
-                        borderColor: `${commodityAccent(c)}40`,
-                        color: commodityAccent(c),
-                      }}
-                    >
-                      {c.symbol}
-                    </span>
+          <div className="space-y-2">
+            {inventory.map(({ commodity: c, qty: q, productionRate, spot: s }) => (
+              <div
+                key={idStr(c.id)}
+                className={cn(
+                  'flex items-center justify-between rounded-lg border p-3 transition-transform duration-300',
+                  q > 0
+                    ? 'border-white/[0.06] bg-white/[0.02] hover:-translate-y-0.5'
+                    : 'border-white/[0.03] bg-transparent opacity-60',
+                )}
+                style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border text-[10px] font-semibold"
+                    style={{
+                      borderColor: `${commodityAccent(c)}40`,
+                      color: commodityAccent(c),
+                    }}
+                  >
+                    {c.symbol}
+                  </span>
+                  <div>
                     <span className="text-sm text-[#EDEDEF]">{c.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold">
-                      {formatQty(q)} {c.unit}
-                    </div>
-                    <div className="text-[10px] text-[#8A8F98]">
-                      @ {formatPrice(s?.price ?? c.basePrice)}
-                    </div>
+                    {productionRate > 0 && (
+                      <div className="font-mono text-[9px] text-[#64748b]">
+                        +{formatQty(productionRate)}/tick prod.
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <div className={cn('text-sm font-semibold', q <= 0 && 'text-[#64748b]')}>
+                    {formatQty(q)} {c.unit}
+                  </div>
+                  <div className="text-[10px] text-[#8A8F98]">
+                    @ {formatPrice(s?.price ?? c.basePrice)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {holdings.length === 0 && (
+            <p className="mt-2 text-xs text-[#8A8F98]">
+              Buy commodities on the Exchange tab to build your stockpile.
+            </p>
           )}
         </div>
 

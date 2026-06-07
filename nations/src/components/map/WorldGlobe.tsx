@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Globe, { type GlobeMethods } from 'react-globe.gl'
 import { useGame, type Country } from '../../context/GameContext'
 import { formatMoney, getCommodity, getCountry, idStr } from '../../lib/utils'
+import { CountryGlobeDetail } from './CountryGlobeDetail'
+import { GlobeCountryList } from './GlobeCountryList'
+import { GlobeControls } from './GlobeControls'
 import { Panel } from '../ui/Panel'
-import { tokens } from '../../lib/design-system'
 import { cn } from '../../lib/cn'
 
 const COMMODITY_ARC_COLORS: Record<string, string> = {
@@ -13,6 +15,8 @@ const COMMODITY_ARC_COLORS: Record<string, string> = {
   ELC: '#60a5fa',
   REE: '#a78bfa',
 }
+
+const DEFAULT_POV = { lat: 20, lng: 0, altitude: 2.2 }
 
 function arcColorForCommodity(symbol: string | undefined): string {
   if (!symbol) return '#60a5fa'
@@ -27,6 +31,7 @@ type GlobePoint = {
   flag: string
   gdpScore: number
   isPlayer: boolean
+  isBot: boolean
   size: number
   altitude: number
   color: string
@@ -43,9 +48,12 @@ type GlobeArc = {
   stroke: number
 }
 
-function pointColor(country: Country, isPlayer: boolean): string {
+function pointColor(country: Country, isPlayer: boolean, isSelected: boolean, maxGdp: number): string {
   if (isPlayer) return 'rgba(127, 119, 221, 0.95)'
-  const intensity = Math.min(country.gdpScore / 100_000, 1)
+  if (isSelected) return 'rgba(45, 212, 191, 0.95)'
+  if (!country.isBot) return 'rgba(96, 165, 250, 0.85)'
+  const cap = Math.max(maxGdp, 500_000)
+  const intensity = Math.min(country.gdpScore / cap, 1)
   return `rgba(29, 158, 117, ${0.35 + intensity * 0.55})`
 }
 
@@ -62,13 +70,44 @@ export function WorldGlobe({
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 640, height: 480 })
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null)
+  const [autoRotate, setAutoRotate] = useState(true)
+
+  const maxGdp = useMemo(
+    () => Math.max(1, ...countries.map((c) => c.gdpScore)),
+    [countries],
+  )
+
+  const playerCountry = useMemo(
+    () => (playerCountryId != null ? countries.find((c) => c.id === playerCountryId) : undefined),
+    [countries, playerCountryId],
+  )
+
+  const flyToCountry = useCallback((country: Country, altitude = 1.6) => {
+    globeRef.current?.pointOfView(
+      { lat: country.lat, lng: country.lng, altitude },
+      900,
+    )
+  }, [])
+
+  const selectCountry = useCallback(
+    (country: Country) => {
+      setSelectedCountry(country)
+      flyToCountry(country)
+      onCountryClick?.(country)
+    },
+    [flyToCountry, onCountryClick],
+  )
 
   useEffect(() => {
     if (!globeRef.current) return
     const controls = globeRef.current.controls()
-    controls.autoRotate = true
-    controls.autoRotateSpeed = 0.4
-  }, [active, dimensions])
+    controls.autoRotate = autoRotate
+    controls.autoRotateSpeed = 0.35
+    controls.enablePan = true
+    controls.minDistance = 120
+    controls.maxDistance = 400
+  }, [active, dimensions, autoRotate])
 
   useEffect(() => {
     const el = containerRef.current
@@ -81,10 +120,18 @@ export function WorldGlobe({
     return () => ro.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (active && playerCountry && !selectedCountry) {
+      const t = window.setTimeout(() => flyToCountry(playerCountry, 2), 600)
+      return () => window.clearTimeout(t)
+    }
+  }, [active, playerCountry, selectedCountry, flyToCountry])
+
   const points = useMemo<GlobePoint[]>(() => {
     return countries.map((country) => {
       const isPlayer = playerCountryId != null && country.id === playerCountryId
-      const intensity = Math.min(country.gdpScore / 100_000, 1)
+      const isSelected = selectedCountry?.id === country.id
+      const intensity = Math.min(country.gdpScore / maxGdp, 1)
       return {
         id: idStr(country.id),
         lat: country.lat,
@@ -93,12 +140,13 @@ export function WorldGlobe({
         flag: country.flag,
         gdpScore: country.gdpScore,
         isPlayer,
-        size: isPlayer ? 0.55 : 0.35 + intensity * 0.2,
-        altitude: 0.01 + intensity * 0.02,
-        color: pointColor(country, isPlayer),
+        isBot: country.isBot,
+        size: isPlayer ? 0.6 : isSelected ? 0.55 : 0.38 + intensity * 0.18,
+        altitude: isSelected ? 0.08 : isPlayer ? 0.05 : 0.012 + intensity * 0.02,
+        color: pointColor(country, isPlayer, isSelected, maxGdp),
       }
     })
-  }, [countries, playerCountryId])
+  }, [countries, playerCountryId, maxGdp, selectedCountry])
 
   const offerArcs = useMemo<GlobeArc[]>(() => {
     return offers.slice(0, 16).flatMap((offer) => {
@@ -148,12 +196,21 @@ export function WorldGlobe({
   return (
     <Panel
       title="World Globe"
-      subtitle={`${countries.length} nations · ${onlineCount} online · ${offers.length} open offers`}
+      subtitle={`${countries.length} nations · ${onlineCount} online · click or search to inspect`}
       label="Geography"
       spotlight
       className={cn('h-full min-h-0', className)}
     >
-      <div ref={containerRef} className="relative min-h-0 flex-1 bg-[#020203]">
+      <div
+        ref={containerRef}
+        className="relative min-h-0 flex-1 bg-[#020203]"
+        onMouseEnter={() => {
+          if (globeRef.current) globeRef.current.controls().autoRotate = false
+        }}
+        onMouseLeave={() => {
+          if (globeRef.current) globeRef.current.controls().autoRotate = autoRotate
+        }}
+      >
         {active && (
           <Globe
             ref={globeRef}
@@ -161,8 +218,8 @@ export function WorldGlobe({
             height={dimensions.height}
             backgroundColor="rgba(0,0,0,0)"
             globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-            atmosphereColor="#1D9E75"
-            atmosphereAltitude={0.15}
+            atmosphereColor="#1a9e75"
+            atmosphereAltitude={0.25}
             animateIn
             pointsData={points}
             pointLat="lat"
@@ -170,14 +227,16 @@ export function WorldGlobe({
             pointColor="color"
             pointAltitude="altitude"
             pointRadius="size"
+            pointsMerge
             pointLabel={(d: object) => {
               const p = d as GlobePoint
-              return `<div class="globe-tooltip"><strong>${p.flag} ${p.name}</strong><br/>GDP ${formatMoney(p.gdpScore, true)}</div>`
+              const kind = p.isPlayer ? 'Your nation' : p.isBot ? 'AI nation' : 'Human player'
+              return `<div class="globe-tooltip"><strong>${p.flag} ${p.name}</strong><br/><span style="color:#94a3b8">${kind}</span><br/>GDP ${formatMoney(p.gdpScore, true)}<br/><span style="color:#64748b;font-size:10px">Click for details</span></div>`
             }}
             onPointClick={(d: object) => {
               const p = d as GlobePoint
               const country = countries.find((c) => idStr(c.id) === p.id)
-              if (country) onCountryClick?.(country)
+              if (country) selectCountry(country)
             }}
             arcsData={arcs}
             arcStartLat="startLat"
@@ -193,9 +252,31 @@ export function WorldGlobe({
           />
         )}
 
-        <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-lg border border-white/[0.08] bg-[#050506]/80 px-3 py-2 text-[10px] text-[#8A8F98] backdrop-blur-md">
-          <span className="font-mono-label uppercase tracking-widest">Live trade arcs</span>
-          <div className="mt-1 flex flex-wrap gap-2 text-[#EDEDEF]">
+        <GlobeCountryList
+          selectedId={selectedCountry?.id ?? null}
+          onSelect={selectCountry}
+        />
+
+        <GlobeControls
+          autoRotate={autoRotate}
+          onToggleRotate={() => setAutoRotate((v) => !v)}
+          onFocusPlayer={() => playerCountry && selectCountry(playerCountry)}
+          onResetView={() => {
+            setSelectedCountry(null)
+            globeRef.current?.pointOfView(DEFAULT_POV, 900)
+          }}
+          hasPlayer={playerCountry != null}
+        />
+
+        <div className="pointer-events-none absolute bottom-3 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-lg border border-[#1a9e75]/20 bg-[#0a0e1a]/85 px-3 py-2 text-[10px] text-[#64748b] backdrop-blur-md md:max-w-xs">
+          <span className="font-mono uppercase tracking-widest">Legend</span>
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[#e2e8f0]">
+            <LegendDot color="#7f77dd" label="You" />
+            <LegendDot color="#60a5fa" label="Human" />
+            <LegendDot color="#1d9e75" label="AI bot" />
+            <LegendDot color="#2dd4bf" label="Selected" />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 border-t border-white/[0.06] pt-2">
             {Object.entries(COMMODITY_ARC_COLORS).map(([sym, color]) => (
               <span key={sym} className="inline-flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full" style={{ background: color }} />
@@ -203,13 +284,24 @@ export function WorldGlobe({
               </span>
             ))}
           </div>
-          {playerCountryId != null && (
-            <div className="mt-1.5" style={{ color: tokens.color.accent }}>
-              ● Your nation
-            </div>
-          )}
         </div>
+
+        {selectedCountry && (
+          <CountryGlobeDetail
+            country={selectedCountry}
+            onClose={() => setSelectedCountry(null)}
+          />
+        )}
       </div>
     </Panel>
+  )
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+      {label}
+    </span>
   )
 }

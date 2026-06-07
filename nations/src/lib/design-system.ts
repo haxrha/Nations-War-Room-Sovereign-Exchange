@@ -1,31 +1,32 @@
-/** Linear / Modern design tokens — single source of truth */
+/** War room / Bloomberg terminal design tokens */
 export const tokens = {
   color: {
-    backgroundDeep: '#020203',
-    backgroundBase: '#050506',
-    backgroundElevated: '#0a0a0c',
-    surface: 'rgba(255,255,255,0.05)',
-    surfaceHover: 'rgba(255,255,255,0.08)',
-    foreground: '#EDEDEF',
-    foregroundMuted: '#8A8F98',
-    foregroundSubtle: 'rgba(255,255,255,0.60)',
-    accent: '#5E6AD2',
-    accentBright: '#6872D9',
-    accentGlow: 'rgba(94,106,210,0.3)',
-    borderDefault: 'rgba(255,255,255,0.06)',
-    borderHover: 'rgba(255,255,255,0.10)',
-    borderAccent: 'rgba(94,106,210,0.30)',
-    success: '#34d399',
+    backgroundDeep: '#060b14',
+    backgroundBase: '#0a0e1a',
+    backgroundElevated: '#0f1729',
+    surface: 'rgba(15, 23, 41, 0.85)',
+    surfaceHover: 'rgba(26, 158, 117, 0.08)',
+    foreground: '#f1f5f9',
+    foregroundMuted: '#94a3b8',
+    foregroundSubtle: '#64748b',
+    accent: '#1a9e75',
+    accentBright: '#2dd4bf',
+    accentGlow: 'rgba(45, 212, 191, 0.25)',
+    borderDefault: 'rgba(26, 158, 117, 0.12)',
+    borderHover: 'rgba(45, 212, 191, 0.28)',
+    borderAccent: 'rgba(45, 212, 191, 0.35)',
+    success: '#2dd4bf',
     danger: '#f87171',
-    inputBg: '#0F0F12',
+    warning: '#fbbf24',
+    inputBg: '#0a0e1a',
   },
   shadow: {
-    card: '0 0 0 1px rgba(255,255,255,0.06), 0 2px 20px rgba(0,0,0,0.4), 0 0 40px rgba(0,0,0,0.2)',
+    card: '0 0 0 1px rgba(26,158,117,0.08), 0 4px 24px rgba(0,0,0,0.5)',
     cardHover:
-      '0 0 0 1px rgba(255,255,255,0.1), 0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(94,106,210,0.1)',
+      '0 0 0 1px rgba(45,212,191,0.22), 0 0 32px rgba(45,212,191,0.12), 0 8px 40px rgba(0,0,0,0.55)',
     accent:
-      '0 0 0 1px rgba(94,106,210,0.5), 0 4px 12px rgba(94,106,210,0.3), inset 0 1px 0 0 rgba(255,255,255,0.2)',
-    innerHighlight: 'inset 0 1px 0 0 rgba(255,255,255,0.1)',
+      '0 0 0 1px rgba(45,212,191,0.4), 0 4px 16px rgba(26,158,117,0.25), inset 0 1px 0 0 rgba(255,255,255,0.08)',
+    innerHighlight: 'inset 0 1px 0 0 rgba(255,255,255,0.06)',
   },
   easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
   duration: {
@@ -36,13 +37,13 @@ export const tokens = {
 } as const
 
 export const COMMODITY_COLORS: Record<string, string> = {
-  OIL: '#5E6AD2',
-  STL: '#8A8F98',
-  GRN: '#6872D9',
-  ELC: '#9AA0FF',
-  REE: '#6366f1',
+  OIL: '#fbbf24',
+  STL: '#94a3b8',
+  GRN: '#2dd4bf',
+  ELC: '#60a5fa',
+  REE: '#a78bfa',
 }
 
 export function commodityColor(symbol: string): string {
-  return COMMODITY_COLORS[symbol] ?? tokens.color.accent
+  return COMMODITY_COLORS[symbol] ?? tokens.color.accentBright
 }

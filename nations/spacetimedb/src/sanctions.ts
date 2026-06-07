@@ -15,7 +15,6 @@ export const impose_sanction = spacetimedb.reducer(
 
     const target = ctx.db.country.id.find(targetCountryId);
     if (!target) throw new SenderError('Target country not found');
-    if (target.isBot) throw new SenderError('Cannot sanction bot nations');
     if (target.id === issuer.id) throw new SenderError('Cannot sanction yourself');
 
     if (commodityId !== 0n && !ctx.db.commodity.id.find(commodityId)) {

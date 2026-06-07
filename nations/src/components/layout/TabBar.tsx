@@ -48,8 +48,8 @@ export function TabBar({ active, onChange, offerCount = 0 }: TabBarProps) {
                 'relative flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-center transition-all duration-200 md:flex-row md:justify-center md:gap-2 md:px-4',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#5E6AD2]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050506]',
                 isActive
-                  ? 'bg-[#5E6AD2]/15 text-[#EDEDEF] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]'
-                  : 'text-[#8A8F98] hover:bg-white/[0.05] hover:text-[#EDEDEF]',
+                  ? 'bg-[#1a9e75]/15 text-[#f1f5f9] shadow-[inset_0_1px_0_0_rgba(45,212,191,0.15)]'
+                  : 'text-[#64748b] hover:bg-[#1a9e75]/08 hover:text-[#f1f5f9]',
               )}
               style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             >

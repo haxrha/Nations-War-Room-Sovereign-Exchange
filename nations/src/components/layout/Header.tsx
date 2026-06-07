@@ -1,24 +1,46 @@
-import { Globe, Wifi, WifiOff, Users } from 'lucide-react'
+import { Globe, RotateCcw, Wifi, WifiOff, Users } from 'lucide-react'
+import { useState } from 'react'
 import { useGame } from '../../context/GameContext'
 import { formatMoney } from '../../lib/utils'
 import { Badge } from '../ui/Panel'
 import { cn } from '../../lib/cn'
 
 export function Header() {
-  const { playerCountry, connected, tablesReady, now, onlineHumans } = useGame()
+  const { playerCountry, connected, tablesReady, now, onlineHumans, resetWorld } = useGame()
+  const [resetting, setResetting] = useState(false)
+
+  async function handleResetWorld() {
+    if (
+      !window.confirm(
+        'Reset the entire world? All trades, players, and balances will be wiped and re-seeded at human scale. You will need to refresh to reconnect.',
+      )
+    ) {
+      return
+    }
+    setResetting(true)
+    try {
+      await resetWorld()
+      window.location.reload()
+    } catch {
+      setResetting(false)
+    }
+  }
 
   return (
-    <header className="relative z-50 shrink-0 border-b border-white/[0.06] bg-[#050506]/80 backdrop-blur-xl">
+    <header className="relative z-50 shrink-0 border-b border-[#1a9e75]/15 bg-[#0a0e1a]/95 backdrop-blur-xl">
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 md:px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.02] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]">
-            <Globe className="h-5 w-5 text-[#5E6AD2]" strokeWidth={1.75} />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#1a9e75]/25 bg-[#0f1729] shadow-[0_0_16px_rgba(45,212,191,0.08)]">
+            <Globe className="h-5 w-5 text-[#2dd4bf]" strokeWidth={1.75} />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight md:text-xl">
-              <span className="gradient-text">Nations</span>
+            <h1 className="text-lg font-semibold tracking-tight text-[#f1f5f9] md:text-xl">
+              NATIONS
+              <span className="ml-2 font-mono text-[10px] font-normal tracking-[0.25em] text-[#64748b]">
+                WAR ROOM
+              </span>
             </h1>
-            <p className="font-mono-label text-[10px] uppercase tracking-widest text-[#8A8F98]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#64748b]">
               Sovereign Trade Exchange
             </p>
           </div>
@@ -36,7 +58,7 @@ export function Header() {
             )}
           </Badge>
           {tablesReady && (
-            <span className="live-dot hidden h-1.5 w-1.5 rounded-full bg-emerald-400 md:inline-block" />
+            <span className="live-dot hidden h-1.5 w-1.5 rounded-full bg-[#2dd4bf] md:inline-block" />
           )}
           {onlineHumans.length > 0 && (
             <Badge variant="accent">
@@ -46,32 +68,49 @@ export function Header() {
           )}
         </div>
 
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleResetWorld}
+            disabled={!connected || resetting}
+            className={cn(
+              'flex items-center gap-1.5 rounded-lg border border-[#1a9e75]/15 bg-[#0f1729]/80 px-3 py-2',
+              'font-mono text-[10px] uppercase tracking-widest text-[#64748b]',
+              'transition-colors hover:border-[#f87171]/30 hover:text-[#f87171]',
+              'disabled:cursor-not-allowed disabled:opacity-40',
+            )}
+            title="Wipe and re-seed economy at human scale"
+          >
+            <RotateCcw className={cn('h-3.5 w-3.5', resetting && 'animate-spin')} />
+            Reset world
+          </button>
+
         {playerCountry && (
           <div
             className={cn(
-              'flex items-center gap-4 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2',
-              'transition-transform duration-300 hover:-translate-y-0.5',
+              'flex items-center gap-4 rounded-lg border border-[#1a9e75]/15 bg-[#0f1729]/80 px-4 py-2',
+              'transition-all duration-300 hover:border-[#2dd4bf]/30 hover:shadow-[0_0_20px_rgba(45,212,191,0.08)]',
             )}
-            style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
           >
             <div className="text-2xl">{playerCountry.flag}</div>
             <div>
-              <div className="text-sm font-semibold tracking-tight">
+              <div className="text-sm font-semibold tracking-tight text-[#f1f5f9]">
                 {playerCountry.name}
-                <span className="ml-2 font-mono-label text-[10px] text-[#8A8F98]">
+                <span className="ml-2 font-mono text-[10px] text-[#64748b]">
                   {playerCountry.isoCode}
                 </span>
               </div>
-              <div className="text-xs text-[#8A8F98]">
-                Treasury {formatMoney(playerCountry.balance, true)} · GDP{' '}
+              <div className="font-mono text-xs tabular-nums text-[#94a3b8]">
+                TREAS {formatMoney(playerCountry.balance, true)} · GDP{' '}
                 {formatMoney(playerCountry.gdpScore, true)}
               </div>
             </div>
-            <div className="hidden text-right text-[10px] text-[#8A8F98] md:block">
+            <div className="hidden font-mono text-[10px] tabular-nums text-[#64748b] md:block">
               {new Date(now).toLocaleTimeString()}
             </div>
           </div>
         )}
+        </div>
       </div>
     </header>
   )

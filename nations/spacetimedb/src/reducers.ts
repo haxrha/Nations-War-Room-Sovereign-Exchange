@@ -7,7 +7,11 @@ import {
   requireCountryByIdentity,
 } from './lib/helpers';
 import { executeTrade } from './lib/trade';
-import { pickPlayerSpawn } from './lib/spawn';
+import {
+  HUMAN_START_BALANCE,
+  HUMAN_STARTER_RESOURCES,
+  pickPlayerSpawn,
+} from './lib/spawn';
 
 function countHumanCountries(ctx: Parameters<typeof findCountryByIdentity>[0]) {
   let n = 0;
@@ -131,10 +135,26 @@ export const on_connect = spacetimedb.clientConnected((ctx) => {
     lng: spawn.lng,
     isBot: false,
     botStrategy: '',
-    balance: 100_000,
-    gdpScore: 100_000,
+    balance: HUMAN_START_BALANCE,
+    gdpScore: 0,
     online: true,
   });
+
+  for (const starter of HUMAN_STARTER_RESOURCES) {
+    for (const commodity of ctx.db.commodity.iter()) {
+      if (commodity.symbol !== starter.symbol) continue;
+      ctx.db.countryResource.insert({
+        id: 0n,
+        countryId: countryRow.id,
+        commodityId: commodity.id,
+        qty: starter.qty,
+        productionRate: starter.productionRate,
+      });
+      break;
+    }
+  }
+
+  recalculateGdp(ctx, countryRow.id);
 
   ctx.db.player.insert({
     identity: ctx.sender,

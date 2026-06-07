@@ -1,3 +1,13 @@
+/** Starting treasury — aligned with bot nations (~$350k–$780k). */
+export const HUMAN_START_BALANCE = 480_000;
+
+/** Modest starter stockpile so new players can list and trade immediately. */
+export const HUMAN_STARTER_RESOURCES = [
+  { symbol: 'GRN', qty: 2_500, productionRate: 2 },
+  { symbol: 'STL', qty: 1_200, productionRate: 1 },
+  { symbol: 'OIL', qty: 600, productionRate: 1 },
+] as const;
+
 /** Spawn slots so multiple human players don't stack on the same map point. */
 export const PLAYER_SPAWN_SLOTS = [
   { lat: 38.9, lng: -77.0, region: 'North America', flag: '🇺🇸' },

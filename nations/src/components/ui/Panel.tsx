@@ -73,7 +73,7 @@ export function StatPill({
       <div className="font-mono-label text-[10px] uppercase tracking-widest text-[#8A8F98]">
         {label}
       </div>
-      <div className="mt-1 truncate text-lg font-semibold tracking-tight text-[#EDEDEF]">
+      <div className="mt-1 truncate font-mono text-lg font-semibold tabular-nums tracking-tight text-[#f1f5f9]">
         {value}
       </div>
       {hint && <div className="mt-0.5 text-[10px] text-[#8A8F98]">{hint}</div>}
@@ -90,8 +90,8 @@ export function Badge({
 }) {
   const styles = {
     default: 'border-white/10 text-[#8A8F98] bg-white/[0.04]',
-    accent: 'border-[#5E6AD2]/30 text-[#6872D9] bg-[#5E6AD2]/10',
-    success: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
+    accent: 'border-[#2dd4bf]/30 text-[#2dd4bf] bg-[#1a9e75]/10',
+    success: 'border-[#2dd4bf]/30 text-[#2dd4bf] bg-[#1a9e75]/10',
     danger: 'border-red-500/30 text-red-400 bg-red-500/10',
   }
   return (

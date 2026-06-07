@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ShieldBan, ShieldOff } from 'lucide-react'
 import { useGame } from '../../context/GameContext'
-import { getCommodity, getCountry, idStr } from '../../lib/utils'
+import { botStrategyLabel, getCommodity, getCountry, idStr } from '../../lib/utils'
 import { Panel } from '../ui/Panel'
 import { Button, Input, Select } from '../ui/Button'
 import { cn } from '../../lib/cn'
@@ -18,9 +18,9 @@ export function SanctionsPanel({ className }: { className?: string }) {
     error,
   } = useGame()
 
-  const humanTargets = countries.filter(
-    (c) => !c.isBot && c.id !== playerCountryId,
-  )
+  const sanctionTargets = countries.filter((c) => c.id !== playerCountryId)
+  const botTargets = sanctionTargets.filter((c) => c.isBot)
+  const humanTargets = sanctionTargets.filter((c) => !c.isBot)
   const onlineHumanTargets = humanTargets.filter((c) => c.online)
 
   const [targetId, setTargetId] = useState('')
@@ -45,7 +45,7 @@ export function SanctionsPanel({ className }: { className?: string }) {
   return (
     <Panel
       title="Diplomacy & Sanctions"
-      subtitle="Block trade with other human nations"
+      subtitle="Block trade with AI nations or other human players"
       label="Sanctions"
       spotlight
       className={cn('h-full min-h-0', className)}
@@ -54,12 +54,41 @@ export function SanctionsPanel({ className }: { className?: string }) {
         <div className="scroll-subtle min-h-0 flex-1 overflow-y-auto p-4 space-y-4">
           <section>
             <h3 className="font-mono-label mb-2 text-[10px] uppercase tracking-widest text-[#8A8F98]">
-              Active players online
+              AI nations ({botTargets.length})
+            </h3>
+            {botTargets.length === 0 ? (
+              <p className="text-xs text-[#8A8F98]">No bot nations available.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {botTargets.map((c) => (
+                  <li
+                    key={idStr(c.id)}
+                    className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-sm"
+                  >
+                    <span>
+                      {c.flag} {c.name}{' '}
+                      <span className="text-[#8A8F98]">{botStrategyLabel(c.botStrategy)}</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="font-mono text-[10px] text-[#64748b] hover:text-[#2dd4bf]"
+                      onClick={() => setTargetId(idStr(c.id))}
+                    >
+                      Select
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section>
+            <h3 className="font-mono-label mb-2 text-[10px] uppercase tracking-widest text-[#8A8F98]">
+              Human players online
             </h3>
             {onlineHumanTargets.length === 0 ? (
               <p className="text-xs text-[#8A8F98]">
-                No other human nations online — open another browser/incognito window to join.
-                Each connection gets its own country and map position automatically.
+                No other human nations online — open another browser window to join.
               </p>
             ) : (
               <ul className="space-y-1.5">
@@ -123,6 +152,9 @@ export function SanctionsPanel({ className }: { className?: string }) {
                     <div className="text-xs">
                       <div className="font-medium text-[#EDEDEF]">
                         {target?.flag} {target?.name}
+                        {target?.isBot && (
+                          <span className="ml-1 font-mono text-[9px] text-[#64748b]">AI</span>
+                        )}
                       </div>
                       <div className="text-[#8A8F98]">
                         {comm} · {s.reason}
@@ -156,11 +188,24 @@ export function SanctionsPanel({ className }: { className?: string }) {
             required
           >
             <option value="">Select nation…</option>
-            {humanTargets.map((c) => (
-              <option key={idStr(c.id)} value={idStr(c.id)}>
-                {c.flag} {c.name}
-              </option>
-            ))}
+            {botTargets.length > 0 && (
+              <optgroup label="AI nations">
+                {botTargets.map((c) => (
+                  <option key={idStr(c.id)} value={idStr(c.id)}>
+                    {c.flag} {c.name} (AI)
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {humanTargets.length > 0 && (
+              <optgroup label="Human nations">
+                {humanTargets.map((c) => (
+                  <option key={idStr(c.id)} value={idStr(c.id)}>
+                    {c.flag} {c.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </Select>
           <Select value={commodityId} onChange={(e) => setCommodityId(e.target.value)}>
             <option value="0">All commodities (full embargo)</option>
@@ -173,14 +218,14 @@ export function SanctionsPanel({ className }: { className?: string }) {
           <Input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder="Reason (e.g. territorial dispute)"
+            placeholder="Reason (e.g. price manipulation)"
             required
           />
           {error && <p className="text-xs text-red-400">{error}</p>}
           <Button
             type="submit"
             className="w-full"
-            disabled={!connected || humanTargets.length === 0}
+            disabled={!connected || sanctionTargets.length === 0}
           >
             <ShieldBan className="h-4 w-4" />
             Impose sanction

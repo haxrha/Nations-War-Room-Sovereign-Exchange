@@ -6,7 +6,7 @@ import './init';
 import './reducers';
 import './sanctions';
 
-export { init, reset_meta } from './init';
+export { init, reset_meta, reset_world } from './init';
 export {
   place_offer,
   accept_trade,

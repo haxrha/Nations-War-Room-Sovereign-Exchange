@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import Editor from '@monaco-editor/react'
 import { Bot, Play, Square, Save, Upload } from 'lucide-react'
 import { useBot } from '../../context/BotContext'
 import { useGame } from '../../context/GameContext'
@@ -122,18 +123,27 @@ export function BotStrategyPanel({ className }: { className?: string }) {
           </Button>
         </div>
 
-        <div className="min-h-0 flex-1 p-4">
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            spellCheck={false}
-            className="input-field h-full min-h-[200px] w-full resize-none font-mono text-xs leading-relaxed"
-            aria-label="Bot strategy code"
-          />
-          <p className="mt-2 text-[10px] text-[#8A8F98]">
-            Define <code className="text-[#5E6AD2]">function myBot(gameState)</code> returning{' '}
-            <code className="text-[#5E6AD2]">{'{ action: "offer" | "accept" | "cancel", ... }'}</code>{' '}
-            or <code className="text-[#5E6AD2]">null</code>. Tick every 5s · max 1 action per tick.
+        <div className="min-h-0 flex-1 overflow-hidden p-4">
+          <div className="h-full min-h-[220px] overflow-hidden rounded-lg border border-[#1a9e75]/15">
+            <Editor
+              height="100%"
+              language="javascript"
+              theme="vs-dark"
+              value={code}
+              onChange={(v) => setCode(v ?? '')}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 12,
+                fontFamily: 'ui-monospace, SF Mono, monospace',
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                padding: { top: 12 },
+              }}
+            />
+          </div>
+          <p className="mt-2 text-[10px] text-[#64748b]">
+            Define <code className="text-[#2dd4bf]">function myBot(gameState)</code> returning an
+            action or <code className="text-[#2dd4bf]">null</code>. Tick every 5s.
           </p>
         </div>
 

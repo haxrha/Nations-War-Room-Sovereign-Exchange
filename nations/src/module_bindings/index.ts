@@ -41,6 +41,7 @@ import InitReducer from "./init_reducer";
 import LiftSanctionReducer from "./lift_sanction_reducer";
 import PlaceOfferReducer from "./place_offer_reducer";
 import ResetMetaReducer from "./reset_meta_reducer";
+import ResetWorldReducer from "./reset_world_reducer";
 import SetCountryProfileReducer from "./set_country_profile_reducer";
 
 // Import all procedure arg schemas
@@ -205,6 +206,7 @@ const reducersSchema = __reducers(
   __reducerSchema("lift_sanction", LiftSanctionReducer),
   __reducerSchema("place_offer", PlaceOfferReducer),
   __reducerSchema("reset_meta", ResetMetaReducer),
+  __reducerSchema("reset_world", ResetWorldReducer),
   __reducerSchema("set_country_profile", SetCountryProfileReducer),
 );
 

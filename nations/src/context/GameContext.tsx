@@ -54,6 +54,7 @@ export interface GameContextValue {
   imposeSanction: (targetCountryId: bigint, commodityId: bigint, reason: string) => Promise<void>
   liftSanction: (sanctionId: bigint) => Promise<void>
   setSelectedCommodity: (id: bigint) => void
+  resetWorld: () => Promise<void>
 }
 
 const GameContext = createContext<GameContextValue | null>(null)
@@ -85,6 +86,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const setProfileReducer = useReducer(reducers.setCountryProfile)
   const imposeSanctionReducer = useReducer(reducers.imposeSanction)
   const liftSanctionReducer = useReducer(reducers.liftSanction)
+  const resetWorldReducer = useReducer(reducers.resetWorld)
 
   const tablesReady =
     countriesReady &&
@@ -225,6 +227,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [liftSanctionReducer],
   )
 
+  const resetWorld = useCallback(async () => {
+    setError(null)
+    try {
+      await resetWorldReducer()
+      setPriceHistory({})
+      prevSpotRef.current.clear()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to reset world')
+      throw e
+    }
+  }, [resetWorldReducer])
+
   const value = useMemo(
     (): GameContextValue => ({
       connected,
@@ -252,6 +266,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       imposeSanction,
       liftSanction,
       setSelectedCommodity: setSelectedCommodityId,
+      resetWorld,
     }),
     [
       connected,
@@ -278,6 +293,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setCountryProfile,
       imposeSanction,
       liftSanction,
+      resetWorld,
     ],
   )
 
